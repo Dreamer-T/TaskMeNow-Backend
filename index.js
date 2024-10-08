@@ -150,7 +150,7 @@ app.delete('/users/:id', (req, res) => {
 });
 
 // 启动服务器
-const PORT = process.env.PORT || 3000; // 使用环境变量 PORT
+const PORT = process.env.PORT || 8080; // 使用环境变量 PORT
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 }); 
