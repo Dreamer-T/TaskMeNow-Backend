@@ -8,7 +8,7 @@ const db = mysql.createConnection({
     host: '34.129.180.29',  // 使用你的数据库hostname
     user: 'root',            // 替换为你的MySQL用户名
     password: 'taskme103',    // 替换为你的MySQL密码
-    database: 'TaskMeNow' // 替换为你的数据库名称
+    database: 'Character' // 替换为你的数据库名称
 });
 
 // 连接数据库
