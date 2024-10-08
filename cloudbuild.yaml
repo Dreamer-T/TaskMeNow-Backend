@@ -15,6 +15,6 @@
     - '--image'
     - 'gcr.io/$taskmnow-backend/SERVICE_NAME:$COMMIT_SHA'
     - '--region'
-    - 'global'
+    - 'australia-southeast2-a'
   images:
   - 'gcr.io/$taskmnow-backend/SERVICE_NAME:$COMMIT_SHA'
