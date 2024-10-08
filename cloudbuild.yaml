@@ -1,20 +1,4 @@
-  steps:
-  # Build the container image
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$taskmnow-backend/SERVICE_NAME:$COMMIT_SHA', '.']
-  # Push the container image to Container Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$taskmnow-backend/SERVICE_NAME:$COMMIT_SHA']
-  # Deploy container image to Cloud Run
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: gcloud
-    args:
-    - 'run'
-    - 'deploy'
-    - 'SERVICE_NAME'
-    - '--image'
-    - 'gcr.io/$taskmnow-backend/SERVICE_NAME:$COMMIT_SHA'
-    - '--region'
-    - 'australia-southeast2-a'
-  images:
-  - 'gcr.io/$taskmnow-backend/SERVICE_NAME:$COMMIT_SHA'
+steps:
+- name: 'gcr.io/taskmenow/gcloud'
+  script: |
+    gcloud run deploy cloudrunservice --image us-docker.pkg.dev/cloudrun/container/hello --region us-central1 --platform managed --allow-unauthenticated
