@@ -8,7 +8,7 @@ const db = mysql.createConnection({
     host: '34.129.180.29',  // 使用你的数据库hostname
     user: 'root',            // 替换为你的MySQL用户名
     password: 'taskme103',    // 替换为你的MySQL密码
-    database: 'task_manager' // 替换为你的数据库名称
+    database: 'TaskMeNow' // 替换为你的数据库名称
 });
 
 // 连接数据库
@@ -19,6 +19,7 @@ db.connect((err) => {
     }
     console.log('Connected to MySQL');
 });
+
 app.use(bodyParser.json());
 
 // 模拟枚举类型，规定任务的类别
@@ -53,7 +54,6 @@ app.get('/tasks/:id', (req, res) => {
     });
 });
 
-
 // 创建task
 app.post('/tasks', (req, res) => {
     const { description, image, urgency, category, creatorId } = req.body;
@@ -80,11 +80,6 @@ app.post('/tasks', (req, res) => {
     });
 });
 
-app.post('/tasks', (req, res) => {
-    console.log('Received request:', req.body); // 打印请求体
-    // 其他代码...
-});
-
 // 更新task
 app.put('/tasks/:id', (req, res) => {
     const { description, image, urgency, category } = req.body;
@@ -109,7 +104,6 @@ app.delete('/tasks/:id', (req, res) => {
         res.status(204).send();
     });
 });
-
 
 // ========== User APIs ========== //
 
@@ -156,7 +150,7 @@ app.delete('/users/:id', (req, res) => {
 });
 
 // 启动服务器
-const PORT = 3000;
+const PORT = process.env.PORT || 3000; // 使用环境变量 PORT
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
-});
+}); 
