@@ -1,4 +1,0 @@
-steps:
-- name: 'gcr.io/taskmenow/gcloud'
-  script: |
-    gcloud run deploy cloudrunservice --image us-docker.pkg.dev/cloudrun/container/hello --region us-central1 --platform managed --allow-unauthenticated
