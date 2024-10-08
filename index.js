@@ -1,7 +1,24 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
+const mysql = require('mysql2');
 
+// 配置 MySQL 连接
+const db = mysql.createConnection({
+    host: '34.129.180.29',  // 使用你的数据库hostname
+    user: 'root',            // 替换为你的MySQL用户名
+    password: 'taskme103',    // 替换为你的MySQL密码
+    database: 'task_manager' // 替换为你的数据库名称
+});
+
+// 连接数据库
+db.connect((err) => {
+    if (err) {
+        console.error('Error connecting to MySQL:', err);
+        return;
+    }
+    console.log('Connected to MySQL');
+});
 app.use(bodyParser.json());
 
 // 模拟枚举类型，规定任务的类别
@@ -13,53 +30,56 @@ const TaskCategory = {
 };
 
 // 假数据存储（通常会使用数据库）
-let tasks = [];
 let users = [];
-let taskId = 1; // 自动递增的唯一编号
 
 // ========== Task APIs ========== //
 
 // 获取所有tasks
 app.get('/tasks', (req, res) => {
-    res.json(tasks);
+    const query = 'SELECT * FROM tasks';
+    db.query(query, (err, results) => {
+        if (err) return res.status(500).send(err.message);
+        res.json(results);
+    });
 });
 
 // 根据ID获取单个task
 app.get('/tasks/:id', (req, res) => {
-    const task = tasks.find(t => t.id === parseInt(req.params.id));
-    if (!task) return res.status(404).send('Task not found');
-    res.json(task);
+    const query = 'SELECT * FROM tasks WHERE id = ?';
+    db.query(query, [req.params.id], (err, results) => {
+        if (err) return res.status(500).send(err.message);
+        if (results.length === 0) return res.status(404).send('Task not found');
+        res.json(results[0]);
+    });
 });
+
 
 // 创建task
 app.post('/tasks', (req, res) => {
-    console.log('Received request:', req.body); // 打印请求体
     const { description, image, urgency, category, creatorId } = req.body;
 
-    // 验证请求数据
-    // if (!description && !image) return res.status(400).send('Either description or image must be provided.');
-    // if (!urgency || urgency < 1 || urgency > 4) return res.status(400).send('Urgency must be between 1 and 4.');
-    // if (!Object.values(TaskCategory).includes(category)) return res.status(400).send('Invalid task category.');
-    // const creator = users.find(u => u.id === creatorId);
-    // if (!creator) return res.status(400).send('Creator not found.');
+    // 验证数据
+    if (!description && !image) return res.status(400).send('Either description or image must be provided.');
+    if (!urgency || urgency < 1 || urgency > 4) return res.status(400).send('Urgency must be between 1 and 4.');
+    if (!Object.values(TaskCategory).includes(category)) return res.status(400).send('Invalid task category.');
 
-    // 创建新任务
-    const newTask = {
-        id: taskId++, // 自动生成唯一ID
-        description,
-        image,
-        urgency,
-        category,
-        createdAt: new Date().toISOString(), // 自动生成创建时间
-        creator: {
-            id: creator.id,
-            name: creator.name
-        }
-    };
-    console(ncewTask.id);
-    tasks.push(newTask);
-    res.status(201).json(newTask);
+    const query = 'INSERT INTO tasks (description, image, urgency, category, creator_id) VALUES (?, ?, ?, ?, ?)';
+    db.query(query, [description, image, urgency, category, creatorId], (err, result) => {
+        if (err) return res.status(500).send(err.message);
+
+        const newTask = {
+            id: result.insertId, // MySQL会返回自增的ID
+            description,
+            image,
+            urgency,
+            category,
+            createdAt: new Date(),
+            creatorId
+        };
+        res.status(201).json(newTask);
+    });
 });
+
 app.post('/tasks', (req, res) => {
     console.log('Received request:', req.body); // 打印请求体
     // 其他代码...
@@ -67,34 +87,29 @@ app.post('/tasks', (req, res) => {
 
 // 更新task
 app.put('/tasks/:id', (req, res) => {
-    console.log(req)
-    const task = tasks.find(t => t.id === parseInt(req.params.id));
-    if (!task) return res.status(404).send('Task not found');
-
     const { description, image, urgency, category } = req.body;
+    const query = 'UPDATE tasks SET description = ?, image = ?, urgency = ?, category = ? WHERE id = ?';
 
-    // 验证请求数据
-    if (!description && !image) return res.status(400).send('Either description or image must be provided.');
-    if (!urgency || urgency < 1 || urgency > 4) return res.status(400).send('Urgency must be between 1 and 4.');
-    if (!Object.values(TaskCategory).includes(category)) return res.status(400).send('Invalid task category.');
+    db.query(query, [description, image, urgency, category, req.params.id], (err, result) => {
+        if (err) return res.status(500).send(err.message);
+        if (result.affectedRows === 0) return res.status(404).send('Task not found');
 
-    // 更新任务
-    task.description = description;
-    task.image = image;
-    task.urgency = urgency;
-    task.category = category;
-
-    res.json(task);
+        res.json({ message: 'Task updated successfully' });
+    });
 });
 
 // 删除task
 app.delete('/tasks/:id', (req, res) => {
-    const taskIndex = tasks.findIndex(t => t.id === parseInt(req.params.id));
-    if (taskIndex === -1) return res.status(404).send('Task not found');
+    const query = 'DELETE FROM tasks WHERE id = ?';
 
-    tasks.splice(taskIndex, 1);
-    res.status(204).send();
+    db.query(query, [req.params.id], (err, result) => {
+        if (err) return res.status(500).send(err.message);
+        if (result.affectedRows === 0) return res.status(404).send('Task not found');
+
+        res.status(204).send();
+    });
 });
+
 
 // ========== User APIs ========== //
 
