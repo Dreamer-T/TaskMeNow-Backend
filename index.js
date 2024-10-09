@@ -24,7 +24,7 @@ const Character = sequelize.define('Character', {
         type: DataTypes.STRING,
         allowNull: false
     },
-    group: {
+    groupclass: {
         type: DataTypes.ENUM('group1', 'group2', 'group3'), // 改为普通枚举，而非数组
         allowNull: false
     },
@@ -45,7 +45,7 @@ const Task = sequelize.define('Task', {
         autoIncrement: true,
         primaryKey: true
     },
-    description: {
+    _description: {
         type: DataTypes.STRING,
         allowNull: true // 必须二选一
     },
@@ -53,7 +53,7 @@ const Task = sequelize.define('Task', {
         type: DataTypes.STRING,
         allowNull: true
     },
-    group: {
+    groupclass: {
         type: DataTypes.ENUM('group1', 'group2', 'group3'), // 改为普通枚举
         allowNull: false
     },
@@ -90,7 +90,6 @@ sequelize.authenticate().then(() => {
 
 // API 路由
 
-// 获取所有Character记录
 app.get('/', async (req, res) => {
     res.send('Hello World from TaskMeNow');
 });
@@ -118,7 +117,7 @@ app.put('/characters/:id', upload.single('avatar'), async (req, res) => {
     const character = await Character.findByPk(id);
     if (character) {
         character.name = name;
-        character.group = group;
+        character.groupclass = group;
         character.level = level;
         character.avatar = avatar;
         await character.save();
@@ -139,6 +138,22 @@ app.delete('/characters/:id', async (req, res) => {
 app.get('/tasks', async (req, res) => {
     const tasks = await Task.findAll();
     res.json(tasks);
+});
+
+// 获取特定ID的Task记录
+app.get('/tasks/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const task = await Task.findByPk(id);
+        if (task) {
+            res.json(task);
+        } else {
+            res.status(404).json({ message: 'Task not found' });
+        }
+    } catch (error) {
+        console.error('Error fetching task:', error);
+        res.status(500).json({ error: 'Failed to fetch task' });
+    }
 });
 
 // 新增Task
@@ -163,8 +178,8 @@ app.put('/tasks/:id', upload.single('image'), async (req, res) => {
 
     const task = await Task.findByPk(id);
     if (task) {
-        task.description = description;
-        task.group = group;
+        task._description = description;
+        task.groupclass = group;
         task.urgency = urgency;
         task.image = image;
         task.finished = finished;
