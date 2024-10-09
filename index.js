@@ -151,8 +151,8 @@ app.get('/tasks/:id', async (req, res) => {
             res.status(404).json({ message: 'Task not found' });
         }
     } catch (error) {
-        console.error('Error fetching task:', error);
-        res.status(500).json({ error: 'Failed to fetch task' });
+        console.error('Error fetching task:', error); // 输出详细的错误信息
+        res.status(500).json({ error: 'Failed to fetch task', details: error.message });
     }
 });
 
