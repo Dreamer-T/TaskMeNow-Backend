@@ -91,6 +91,10 @@ sequelize.authenticate().then(() => {
 // API 路由
 
 // 获取所有Character记录
+app.get('/', async (req, res) => {
+    res.send('Hello World from TaskMeNow');
+});
+// 获取所有Character记录
 app.get('/characters', async (req, res) => {
     const characters = await Character.findAll();
     res.json(characters);
