@@ -1,21 +1,11 @@
-const express = require('express');
 const mysql = require('mysql2/promise');
-const { Connector } = require('@google-cloud/cloud-sql-connector');
-
-const app = express();
-const port = 8080; // 你可以根据需要更改端口
-
-// 根路由
-app.get('/', (req, res) => {
-    res.send('Welcome to the Cloud SQL API! Use /current-time to get the current database time.');
-});
-
-// 当前时间路由
-app.get('/current-time', async (req, res) => {
-    const connector = new Connector();
-    let pool; // 在这里声明 pool
-
+const { Connector } = require('@google-cloud/cloud-sql-connector'); // 假设你用的是某个数据库连接库
+const connector = new Connector();
+let pool;
+const express = require('express');
+(async () => {
     try {
+        // 在应用程序启动时创建 connector 和连接池
         const clientOpts = await connector.getOptions({
             instanceConnectionName: 'taskmenow:australia-southeast2:main-database',
             ipType: 'PUBLIC',
@@ -28,23 +18,54 @@ app.get('/current-time', async (req, res) => {
             database: 'Company1',
         });
 
-        const conn = await pool.getConnection();
-        const [result] = await conn.query(`SELECT NOW();`);
-        await conn.release();
-
-        res.json(result); // 将结果以 JSON 格式返回
+        console.log('Database pool created successfully');
     } catch (error) {
-        console.error('Error connecting to the database:', error);
-        res.status(500).json({ error: 'Error connecting to the database' });
-    } finally {
-        if (pool) { // 确保 pool 存在后再调用 end
-            await pool.end();
+        console.error('Error setting up the database pool:', error);
+        process.exit(1); // 如果连接池创建失败，直接退出应用程序
+    }
+})();
+
+// 在路由中重用全局的 `pool`
+const someRouteHandler = async (req, res) => {
+    try {
+        const conn = await pool.getConnection(); // 从全局的连接池获取连接
+        const [result] = await conn.query(`SELECT NOW();`); // 执行查询
+        await conn.release(); // 释放连接，返回连接池
+        res.json(result); // 返回查询结果
+    } catch (error) {
+        console.error('Error executing query:', error);
+        res.status(500).json({ error: 'Error executing query' });
+    }
+};
+
+// 在应用程序关闭时清理资源
+process.on('SIGINT', async () => {
+    try {
+        if (pool) {
+            await pool.end(); // 关闭连接池
         }
-        connector.close();
+        connector.close(); // 关闭 connector
+        console.log('Database pool closed successfully');
+        process.exit(0); // 正常退出
+    } catch (error) {
+        console.error('Error closing the database pool:', error);
+        process.exit(1); // 出现问题时退出并带有错误码
     }
 });
-
-// 启动服务器
-app.listen(port, () => {
-    console.log(`Server is running at http://localhost:${port}`);
+const app = express();
+const PORT = process.env.PORT || 3000;
+app.get('/api/time', async (req, res) => {
+    try {
+        const conn = await pool.getConnection(); // 从连接池获取一个连接
+        const [result] = await conn.query('SELECT NOW();'); // 执行查询
+        await conn.release(); // 释放连接回到连接池
+        res.json(result); // 返回查询结果
+    } catch (error) {
+        console.error('Error executing query:', error);
+        res.status(500).json({ error: 'Database query error' });
+    }
+});
+// 启动服务器并监听指定端口
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
