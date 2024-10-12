@@ -4,22 +4,26 @@ const { Connector } = require('@google-cloud/cloud-sql-connector');
 const connector = new Connector();
 
 let pool;
+let currentDatabase = process.env.DB_NAME || 'default_database'; // 默认数据库
 
-const createPool = async () => {
+const createPool = async (dbName = currentDatabase) => {
     try {
         const clientOpts = await connector.getOptions({
             instanceConnectionName: 'taskmenow:australia-southeast2:main-database',
             ipType: 'PUBLIC',
         });
 
+        // 使用指定的数据库名称创建连接池
         pool = await mysql.createPool({
             ...clientOpts,
             user: process.env.DB_USER,
             password: process.env.DB_PASSWORD,
-            connectionLimit: 10, // Adjust based on expected load
+            database: dbName,  // 使用传入的数据库名称
+            connectionLimit: 10, // 根据负载调整连接数
         });
 
-        console.log('Database pool created successfully');
+        currentDatabase = dbName;
+        console.log(`Database pool created successfully for database: ${dbName}`);
     } catch (error) {
         console.error('Error setting up the database pool:', error);
         process.exit(1);
