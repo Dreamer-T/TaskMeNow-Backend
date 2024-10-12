@@ -39,9 +39,21 @@ const closePool = async () => {
         console.error('Error closing the database pool:', error);
     }
 };
+// db.js
+const getUserByUsername = async (username) => {
+    const pool = getPool();
+    const conn = await pool.getConnection();
+    try {
+        const [result] = await conn.query('SELECT * FROM Users WHERE username = ?;', [username]);
+        return result[0];
+    } finally {
+        await conn.release();
+    }
+};
 
 module.exports = {
     createPool,
     getPool,
     closePool,
+    getUserByUsername,
 };
