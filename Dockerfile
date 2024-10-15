@@ -20,4 +20,5 @@ CMD [ "npm", "start" ]
 
 ENV DB_USER=root
 ENV DB_PASSWORD=taskme103
-ENV DB_NAME=Company1
+ENV DB_NAME=MainDatabase
+ENV JWT_SECRET=SECRETXPASS

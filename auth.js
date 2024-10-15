@@ -1,31 +1,22 @@
-// auth.js
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { getPool, getUserByUsername } = require('./db');
+const { getPool, getUserByUseremail } = require('./db');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
-// 注册
-router.post('/register', async (req, res) => {
-    const { username, password } = req.body;
+// user registration
+router.post('/register_user', async (req, res) => {
+    const { email, password, username } = req.body;
     const pool = getPool();
     const conn = await pool.getConnection();
 
     try {
-        // 检查用户名是否已存在
-        const existingUser = await getUserByUsername(username);
-        if (existingUser) {
-            return res.status(400).json({ error: 'Username already exists' });
-        }
-
-        // 加密密码
+        // encrypted
         const hashedPassword = await bcrypt.hash(password, 10);
-
-        // 将用户信息插入数据库
-        await conn.query('INSERT INTO Users (username, password) VALUES (?, ?)', [username, hashedPassword]);
-
+        // insert
+        await conn.query('INSERT INTO Users (email, password, name) VALUES (?, ?, ?)', [email, hashedPassword, username]);
         res.status(201).json({ message: 'User registered successfully' });
     } catch (error) {
         console.error('Error during user registration:', error);
@@ -35,24 +26,44 @@ router.post('/register', async (req, res) => {
     }
 });
 
-// 登录
-router.post('/login', async (req, res) => {
-    const { username, password } = req.body;
+// company registration
+router.post('/register_company', async (req, res) => {
+    const { companyname, adminPassword } = req.body;
+    const pool = getPool();
+    const conn = await pool.getConnection();
 
     try {
-        const user = await getUserByUsername(username);
+        // encrypted
+        const hashedPassword = await bcrypt.hash(adminPassword, 10);
+        // insert
+        await conn.query('INSERT INTO Companies (companyname, adminPassword) VALUES (?, ?)', [companyname, hashedPassword]);
+        res.status(201).json({ message: 'Company registered successfully' });
+    } catch (error) {
+        console.error('Error during company registration:', error);
+        res.status(500).json({ error: 'Registration error' });
+    } finally {
+        await conn.release();
+    }
+});
+
+// user login
+router.post('/login_user', async (req, res) => {
+    const { email, password } = req.body;
+
+    try {
+        const user = await getUserByUseremail(email);
         if (!user) {
             return res.status(400).json({ error: 'Invalid username or password' });
         }
 
-        // 比较密码
+        // compare password
         const isValidPassword = await bcrypt.compare(password, user.password);
         if (!isValidPassword) {
             return res.status(400).json({ error: 'Invalid username or password' });
         }
 
-        // 生成 JWT
-        const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '1h' });
+        // JWT
+        const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
         res.json({ token });
     } catch (error) {
         console.error('Error during login:', error);

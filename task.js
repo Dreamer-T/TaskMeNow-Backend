@@ -1,6 +1,5 @@
-// task.js
 const express = require('express');
-const { getPool } = require('./db');
+const { getPool, checkCompanyExist } = require('./db');
 
 const router = express.Router();
 
@@ -15,9 +14,16 @@ const getTasksFromDB = async (query, params = []) => {
     }
 };
 
-router.get('', async (req, res) => {
+router.get('/:company/:id', async (req, res) => {
+    const company = req.params.company;
+    const id = req.params.id;
     try {
-        const tasks = await getTasksFromDB('SELECT * FROM Tasks;');
+        const [rows] = await checkCompanyExist('SELECT * FROM company WHERE name = ? and id = ?;', [company, id]);
+        if (rows.length === 0) {
+            return res.status(404).send('Company not found.');
+        }
+        const tableName = `${company}_${id}_tasks`;
+        const tasks = await getTasksFromDB('SELECT * FROM ??;', [tableName]);
         res.json(tasks);
     } catch (error) {
         console.error('Error fetching tasks:', error);
