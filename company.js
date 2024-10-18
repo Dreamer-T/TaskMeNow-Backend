@@ -21,8 +21,9 @@ router.get('/search_company', async (req, res) => {
         // Optionally format the data before sending it back
         const companies = rows.map(company => ({
             id: company.id,          // assuming there's an id field
-            name: company.companyname,      // assuming there's a name field
-            logo: company.logo       // assuming there's a logo field (URL or path)
+            companyname: company.companyname,      // assuming there's a name field
+            logo: company.logo,       // assuming there's a logo field (URL or path)
+            uniqueName: company.uniqueName
         }));
 
         res.json(companies);
