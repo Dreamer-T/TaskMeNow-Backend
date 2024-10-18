@@ -53,18 +53,28 @@ router.post('/login_user', async (req, res) => {
     try {
         const user = await getUserByUseremail(email);
         if (!user) {
-            return res.status(400).json({ error: 'Invalid username or password' });
+            return res.status(400).json({ error: 'Invalid email or password' });
         }
 
         // compare password
         const isValidPassword = await bcrypt.compare(password, user.password);
         if (!isValidPassword) {
-            return res.status(400).json({ error: 'Invalid username or password' });
+            return res.status(400).json({ error: 'Invalid email or password' });
         }
 
         // JWT
-        const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
-        res.json({ token });
+        const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '1h' }); // 返回令牌和用户信息
+        res.json({
+            status: 'success',
+            message: '登录成功',
+            token,
+            user: {
+                id: user.id,
+                email: user.email,
+                role: user.role  // 返回用户角色或其他必要信息
+            },
+            expiresIn: 3600  // 告知客户端令牌的过期时间
+        })
     } catch (error) {
         console.error('Error during login:', error);
         res.status(500).json({ error: 'Login error' });
