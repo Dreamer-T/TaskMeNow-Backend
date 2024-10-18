@@ -16,7 +16,7 @@ const getCompaniesFromDB = async (query) => {
 };
 router.get('/search_company', async (req, res) => {
     try {
-        const [rows] = await getCompaniesFromDB('SELECT * FROM Companies;');
+        const rows = await getCompaniesFromDB('SELECT * FROM Companies;');
 
         // Optionally format the data before sending it back
         const companies = rows.map(company => ({
