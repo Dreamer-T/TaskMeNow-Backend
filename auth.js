@@ -5,18 +5,25 @@ const { getPool, getUserByUseremail } = require('./db');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
-
 // user registration
 router.post('/register_user', async (req, res) => {
-    const { email, password, username } = req.body;
+    const { username, email, password, companyID } = req.body;  // 添加可选字段 'company'
     const pool = getPool();
     const conn = await pool.getConnection();
 
     try {
-        // encrypted
+        // 加密密码
         const hashedPassword = await bcrypt.hash(password, 10);
-        // insert
-        await conn.query('INSERT INTO Users (email, password, name) VALUES (?, ?, ?)', [email, hashedPassword, username]);
+
+        // 判断是否提供了可选字段 'company'
+        if (companyID) {
+            // 如果提供了 'company' 字段，则将其插入数据库
+            await conn.query('INSERT INTO Users (email, password, name, companyID) VALUES (?, ?, ?, ?)', [email, hashedPassword, username, companyID]);
+        } else {
+            // 如果没有提供 'company' 字段，则不插入该字段
+            await conn.query('INSERT INTO Users (email, password, name) VALUES (?, ?, ?)', [email, hashedPassword, username]);
+        }
+
         res.status(201).json({ message: 'User registered successfully' });
     } catch (error) {
         console.error('Error during user registration:', error);
@@ -25,6 +32,7 @@ router.post('/register_user', async (req, res) => {
         await conn.release();
     }
 });
+
 
 // company registration
 router.post('/register_company', async (req, res) => {
