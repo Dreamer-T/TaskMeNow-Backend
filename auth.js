@@ -9,7 +9,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
 // user registration
 router.post('/register_user', async (req, res) => {
-    const { username, email, password, level } = req.body;
+    const { username, email, password, role } = req.body;
     const pool = getPool();
     const conn = await pool.getConnection();
 
@@ -17,7 +17,7 @@ router.post('/register_user', async (req, res) => {
         // 加密密码
         const hashedPassword = await bcrypt.hash(password, 10);
         // 如果提供了 'company' 字段，则将其插入数据库
-        await conn.query('INSERT INTO Users (email, password, name, level) VALUES (?, ?, ?, ?)', [email, hashedPassword, username, level]);
+        await conn.query('INSERT INTO Users (email, password, userName, userRole) VALUES (?, ?, ?, ?)', [email, hashedPassword, username, role]);
 
         res.status(200).json({ message: 'User registered successfully' });
     } catch (error) {
