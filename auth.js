@@ -16,7 +16,7 @@ router.post('/register_user', async (req, res) => {
     try {
         // 加密密码
         const hashedPassword = await bcrypt.hash(password, 10);
-        // 如果提供了 'company' 字段，则将其插入数据库
+
         await conn.query('INSERT INTO Users (email, password, userName, userRole) VALUES (?, ?, ?, ?)', [email, hashedPassword, username, role]);
 
         res.status(200).json({ message: 'User registered successfully' });
@@ -45,14 +45,14 @@ router.post('/login', async (req, res) => {
         }
 
         // JWT
-        const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '1h' }); // 返回令牌和用户信息
+        const token = jwt.sign({ id: user.ID, email: user.email }, JWT_SECRET, { expiresIn: '1h' }); // 返回令牌和用户信息
         res.status(200).json({
             message: '登录成功',
             token,
             user: {
-                id: user.id,
+                id: user.ID,
                 email: user.email,
-                level: user.level  // 返回用户角色或其他必要信息
+                role: user.userRole  // 返回用户角色或其他必要信息
             },
             expiresIn: 3600  // 告知客户端令牌的过期时间
         })
