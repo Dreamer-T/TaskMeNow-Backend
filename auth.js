@@ -5,57 +5,31 @@ const { getPool, getUserByUseremail } = require('./db');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
+
+
 // user registration
 router.post('/register_user', async (req, res) => {
-    const { username, email, password, companyID } = req.body;  // 添加可选字段 'company'
+    const { username, email, password, level } = req.body;
     const pool = getPool();
     const conn = await pool.getConnection();
 
     try {
         // 加密密码
         const hashedPassword = await bcrypt.hash(password, 10);
+        // 如果提供了 'company' 字段，则将其插入数据库
+        await conn.query('INSERT INTO Users (email, password, name, level) VALUES (?, ?, ?, ?)', [email, hashedPassword, username, level]);
 
-        // 判断是否提供了可选字段 'company'
-        if (companyID) {
-            // 如果提供了 'company' 字段，则将其插入数据库
-            await conn.query('INSERT INTO Users (email, password, name, companyID) VALUES (?, ?, ?, ?)', [email, hashedPassword, username, companyID]);
-        } else {
-            // 如果没有提供 'company' 字段，则不插入该字段
-            await conn.query('INSERT INTO Users (email, password, name) VALUES (?, ?, ?)', [email, hashedPassword, username]);
-        }
-
-        res.status(201).json({ message: 'User registered successfully' });
+        res.status(200).json({ message: 'User registered successfully' });
     } catch (error) {
         console.error('Error during user registration:', error);
-        res.status(500).json({ error: 'Registration error' });
-    } finally {
-        await conn.release();
-    }
-});
-
-
-// company registration
-router.post('/register_company', async (req, res) => {
-    const { companyname, adminPassword } = req.body;
-    const pool = getPool();
-    const conn = await pool.getConnection();
-
-    try {
-        // encrypted
-        const hashedPassword = await bcrypt.hash(adminPassword, 10);
-        // insert
-        await conn.query('INSERT INTO Companies (companyname, adminPassword) VALUES (?, ?)', [companyname, hashedPassword]);
-        res.status(201).json({ message: 'Company registered successfully' });
-    } catch (error) {
-        console.error('Error during company registration:', error);
-        res.status(500).json({ error: 'Registration error' });
+        res.status(500).json({ Error: error });
     } finally {
         await conn.release();
     }
 });
 
 // user login
-router.post('/login_user', async (req, res) => {
+router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     try {
@@ -72,14 +46,13 @@ router.post('/login_user', async (req, res) => {
 
         // JWT
         const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '1h' }); // 返回令牌和用户信息
-        res.json({
-            status: 'success',
+        res.status(200).json({
             message: '登录成功',
             token,
             user: {
                 id: user.id,
                 email: user.email,
-                role: user.role  // 返回用户角色或其他必要信息
+                level: user.level  // 返回用户角色或其他必要信息
             },
             expiresIn: 3600  // 告知客户端令牌的过期时间
         })
