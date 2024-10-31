@@ -61,7 +61,7 @@ router.post('/createTask', async (req, res) => {
 
         const query = 'INSERT INTO Tasks (taskDescription, taskImage, assignedTo, createdBy, urgencyLevel) VALUES (?, ?, ?, ?, ?)';
         const values = [taskDescription, taskImage || null, assignedTo, createdBy, urgencyLevel];
-        const [result] = await createTaskInDB(query, values);
+        const result = await createTaskInDB(query, values);
 
         res.status(200).json({ message: 'Task created successfully', taskId: result.insertId });
     } catch (error) {
