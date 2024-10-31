@@ -8,6 +8,7 @@ const getTasksFromDB = async (query, params = []) => {
     const conn = await pool.getConnection();
     try {
         const [result] = await conn.query(query, params);
+        console.log(result);
         return result;
     } finally {
         await conn.release();
