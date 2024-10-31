@@ -48,7 +48,7 @@ router.post('/login', async (req, res) => {
         const token = jwt.sign({ id: user.ID, email: user.email }, JWT_SECRET, { expiresIn: '1h' }); // 返回令牌和用户信息
         res.status(200).json({
             message: '登录成功',
-            token,
+            'token': token,
             user: {
                 id: user.ID,
                 email: user.email,

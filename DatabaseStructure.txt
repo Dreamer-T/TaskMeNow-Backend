@@ -1,0 +1,22 @@
+Database Name: MainDatabase
+
+1. Table Name: Tasks
+   - Fields:
+     - ID - INT - NOT NULL, UNIQUE
+     - taskDescription - VARCHAR(2048) - NOT NULL - Description of the task
+     - taskImage - VARCHAR(256) - - URL of the task image (one image per task)
+     - assignedTo - INT - NOT NULL - FK, ID of the user assigned to complete this task
+     - createdBy - INT - NOT NULL - FK, ID of the user who created this task
+     - createdTime - DATETIME - NOT NULL - Auto-generated
+     - urgencyLevel - INT - NOT NULL - Level of urgency (1, 2, 3, 4; higher values indicate greater urgency)
+     - isDone - ENUM - NOT NULL - [1: Done, 0: Not done]
+
+2. Table Name: User
+   - Fields:
+     - ID - INT - NOT NULL, UNIQUE
+     - userName - VARCHAR(45) - NOT NULL
+     - email - VARCHAR(45) - NOT NULL, UNIQUE
+     - password - VARCHAR(255) - NOT NULL
+     - userRole - ENUM - NOT NULL - ['Manager', 'Supervisor', 'Staff']
+     - avatar - VARCHAR(255) - - URL of the avatar
+     - createdTime - DATETIME - NOT NULL - Auto-generated

@@ -14,34 +14,51 @@ const getTasksFromDB = async (query, params = []) => {
     }
 };
 
-router.get('/:company/:id', async (req, res) => {
-    const company = req.params.company;
-    const id = req.params.id;
-    try {
-        const [rows] = await checkCompanyExist('SELECT * FROM company WHERE name = ? and id = ?;', [company, id]);
-        if (rows.length === 0) {
-            return res.status(404).send('Company not found.');
-        }
-        const tableName = `${company}_${id}_tasks`;
-        const tasks = await getTasksFromDB('SELECT * FROM ??;', [tableName]);
-        res.json(tasks);
-    } catch (error) {
-        console.error('Error fetching tasks:', error);
-        res.status(500).json({ error: 'Database query error' });
-    }
-});
-
 router.get('/:id', async (req, res) => {
     const id = req.params.id;
     try {
         const task = await getTasksFromDB('SELECT * FROM Tasks WHERE id = ?;', [id]);
-        res.json(task);
+        res.status(200).json(task);
     } catch (error) {
         console.error('Error fetching task:', error);
         res.status(500).json({ error: 'Database query error' });
     }
 });
 
-// Add more routes for create, update, and delete tasks here
+router.get('/:assignedTo', async (req, res) => {
+    const assignedTo = req.params.assignedTo;
+    try {
+        const task = await getTasksFromDB('SELECT * FROM Tasks WHERE assignedTo= ?', [assignedTo])
+        res.status(200).json(task);
+    } catch (error) {
+        console.error('Error fetching task:', error);
+        res.status(500).json({ error: 'Database query error' });
+    }
+})
+
+
+// 创建任务的 API
+app.post('/createTask', async (req, res) => {
+    const { taskDescription, taskImage, assignedTo, createdBy, urgencyLevel } = req.body;
+
+    // 检查必填字段
+    if (!taskDescription || !assignedTo || !createdBy || !urgencyLevel) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    try {
+        // 构建插入的 SQL 语句
+
+        const query = 'INSERT INTO Tasks (taskDescription, taskImage, assignedTo, createdBy, urgencyLevel) VALUES (?, ?, ?, ?, ?)';
+        const values = [taskDescription, taskImage || null, assignedTo, createdBy, urgencyLevel];
+
+        const [result] = await pool.execute(query, values);
+
+        res.status(200).json({ message: 'Task created successfully', taskId: result.insertId });
+    } catch (error) {
+        console.error('Error creating task:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
 
 module.exports = router;
