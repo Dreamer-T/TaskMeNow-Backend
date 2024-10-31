@@ -38,7 +38,7 @@ router.get('/:assignedTo', async (req, res) => {
 
 
 // 创建任务的 API
-app.post('/createTask', async (req, res) => {
+router.post('/createTask', async (req, res) => {
     const { taskDescription, taskImage, assignedTo, createdBy, urgencyLevel } = req.body;
 
     // 检查必填字段
