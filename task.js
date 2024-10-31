@@ -1,9 +1,19 @@
 const express = require('express');
-const { getPool, checkCompanyExist } = require('./db');
+const { getPool } = require('./db');
 
 const router = express.Router();
 
 const getTasksFromDB = async (query, params = []) => {
+    const pool = getPool();
+    const conn = await pool.getConnection();
+    try {
+        const [result] = await conn.query(query, params);
+        return result;
+    } finally {
+        await conn.release();
+    }
+};
+const createTaskInDB = async (query, params = []) => {
     const pool = getPool();
     const conn = await pool.getConnection();
     try {
@@ -51,8 +61,7 @@ router.post('/createTask', async (req, res) => {
 
         const query = 'INSERT INTO Tasks (taskDescription, taskImage, assignedTo, createdBy, urgencyLevel) VALUES (?, ?, ?, ?, ?)';
         const values = [taskDescription, taskImage || null, assignedTo, createdBy, urgencyLevel];
-
-        const [result] = await pool.execute(query, values);
+        const [result] = await createTaskInDB(query, values);
 
         res.status(200).json({ message: 'Task created successfully', taskId: result.insertId });
     } catch (error) {
