@@ -7,6 +7,7 @@ const getTasksFromDB = async (query, params = []) => {
     const pool = getPool();
     const conn = await pool.getConnection();
     try {
+        console.log(query, params);
         const [result] = await conn.query(query, params);
         console.log(result);
         return result;
@@ -41,7 +42,7 @@ router.get('/id', async (req, res) => {
 router.get('/assignedTo', async (req, res) => {
     const assignedTo = req.params.assignedTo;
     try {
-        const task = await getTasksFromDB('SELECT * FROM Tasks WHERE assignedTo= ?', [assignedTo])
+        const task = await getTasksFromDB('SELECT * FROM Tasks WHERE assignedTo = ?', [assignedTo])
         console.log(task);
         res.status(200).json(task);
     } catch (error) {
