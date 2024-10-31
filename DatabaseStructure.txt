@@ -15,7 +15,7 @@ Database Name: MainDatabase
    - Fields:
      - ID - INT - NOT NULL, UNIQUE
      - userName - VARCHAR(45) - NOT NULL
-     - email - VARCHAR(45) - NOT NULL, UNIQUE
+     - email - VARCHAR(45) - NOT NULL, UNIQUE 
      - password - VARCHAR(255) - NOT NULL
      - userRole - ENUM - NOT NULL - ['Manager', 'Supervisor', 'Staff']
      - avatar - VARCHAR(255) - - URL of the avatar

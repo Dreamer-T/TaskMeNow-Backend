@@ -24,7 +24,7 @@ const createTaskInDB = async (query, params = []) => {
     }
 };
 
-router.get('/:id', async (req, res) => {
+router.get('/id/:id', async (req, res) => {
     const id = req.params.id;
     try {
         const task = await getTasksFromDB('SELECT * FROM Tasks WHERE id = ?;', [id]);
@@ -35,7 +35,7 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-router.get('/:assignedTo', async (req, res) => {
+router.get('/to/:assignedTo', async (req, res) => {
     const assignedTo = req.params.assignedTo;
     try {
         const task = await getTasksFromDB('SELECT * FROM Tasks WHERE assignedTo= ?', [assignedTo])
@@ -47,18 +47,16 @@ router.get('/:assignedTo', async (req, res) => {
 })
 
 
-// 创建任务的 API
+// API of create task
 router.post('/createTask', async (req, res) => {
     const { taskDescription, taskImage, assignedTo, createdBy, urgencyLevel } = req.body;
 
-    // 检查必填字段
+    // check those are necessary
     if (!taskDescription || !assignedTo || !createdBy || !urgencyLevel) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
 
     try {
-        // 构建插入的 SQL 语句
-
         const query = 'INSERT INTO Tasks (taskDescription, taskImage, assignedTo, createdBy, urgencyLevel) VALUES (?, ?, ?, ?, ?)';
         const values = [taskDescription, taskImage || null, assignedTo, createdBy, urgencyLevel];
         const result = await createTaskInDB(query, values);
