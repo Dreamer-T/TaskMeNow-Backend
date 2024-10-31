@@ -28,7 +28,7 @@ const createTaskInDB = async (query, params = []) => {
     }
 };
 
-router.get('/id', async (req, res) => {
+router.get('/id/:id', async (req, res) => {
     const id = req.params.id;
     try {
         const task = await getTasksFromDB('SELECT * FROM Tasks WHERE id = ?;', [id]);
@@ -39,7 +39,7 @@ router.get('/id', async (req, res) => {
     }
 });
 
-router.get('/assignedTo?assignedTo', async (req, res) => {
+router.get('/assignedTo/:assignedTo', async (req, res) => {
     const assignedTo = req.params.assignedTo;
     try {
         const task = await getTasksFromDB('SELECT * FROM Tasks WHERE assignedTo = ?', [assignedTo])
