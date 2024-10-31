@@ -13,6 +13,8 @@ const getTasksFromDB = async (query, params = []) => {
         await conn.release();
     }
 };
+
+
 const createTaskInDB = async (query, params = []) => {
     const pool = getPool();
     const conn = await pool.getConnection();
@@ -39,6 +41,7 @@ router.get('/assignedTo', async (req, res) => {
     const assignedTo = req.params.assignedTo;
     try {
         const task = await getTasksFromDB('SELECT * FROM Tasks WHERE assignedTo= ?', [assignedTo])
+        console.log(task);
         res.status(200).json(task);
     } catch (error) {
         console.error('Error fetching task:', error);
