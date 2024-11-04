@@ -56,6 +56,7 @@ router.post('/login', async (req, res) => {
                 role: user.userRole, // 返回用户角色或其他必要信息
                 avatar: user.avatar,
                 createdTime: user.createdTime
+                // 这里还需要修改，添加查询Group的操作，通过查询Groups来得到GroupID
             },
             expiresIn: 3600  // 告知客户端令牌的过期时间
         })

@@ -11,7 +11,7 @@ Database Name: MainDatabase
      - urgencyLevel - INT - NOT NULL - Level of urgency (1, 2, 3, 4; higher values indicate greater urgency)
      - isDone - ENUM - NOT NULL - [1: Done, 0: Not done]
 
-2. Table Name: User
+2. Table Name: Users
    - Fields:
      - ID - INT - NOT NULL, UNIQUE
      - userName - VARCHAR(45) - NOT NULL
@@ -20,3 +20,14 @@ Database Name: MainDatabase
      - userRole - ENUM - NOT NULL - ['Manager', 'Supervisor', 'Staff']
      - avatar - VARCHAR(255) - - URL of the avatar
      - createdTime - DATETIME - NOT NULL - Auto-generated
+
+3. Table Name: GroupTypes
+   - Fields:
+     - ID - INT - NOT NULL, UNIQUE
+     - groupName - VARCHAR(45) - NOT NULL - Group name
+
+4. Table Name: Groups
+   - Fields:
+     - ID - INT - NOT NULL, UNIQUE
+     - groupName - VARCHAR(45) - NOT NULL - FK, ID of the group
+     - userName - VARCHAR(45) - NOT NULL - FK, ID of the user
