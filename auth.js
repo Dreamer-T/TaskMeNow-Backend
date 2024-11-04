@@ -51,8 +51,11 @@ router.post('/login', async (req, res) => {
             'token': token,
             user: {
                 id: user.ID,
+                userName: user.userName,
                 email: user.email,
-                role: user.userRole  // 返回用户角色或其他必要信息
+                role: user.userRole, // 返回用户角色或其他必要信息
+                avatar: user.avatar,
+                createdTime: user.createdTime
             },
             expiresIn: 3600  // 告知客户端令牌的过期时间
         })
