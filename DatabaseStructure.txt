@@ -29,5 +29,5 @@ Database Name: MainDatabase
 4. Table Name: Groups
    - Fields:
      - ID - INT - NOT NULL, UNIQUE
-     - groupName - VARCHAR(45) - NOT NULL - FK, ID of the group
-     - userName - VARCHAR(45) - NOT NULL - FK, ID of the user
+     - groupID - INT - NOT NULL - FK, ID of the group
+     - userID - INT - NOT NULL - FK, ID of the user
