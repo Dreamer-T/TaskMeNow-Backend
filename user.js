@@ -14,7 +14,7 @@ const getGroupsFromDB = async (query, params = []) => {
         await conn.release();
     }
 };
-router.get('/id/:id/groups', async (req, res) => {
+router.get('/id/groups/:id', async (req, res) => {
     const id = req.params.id;
     try {
         const groups = await getGroupsFromDB('SELECT * FROM Groups WHERE userID = ?;', [id]);
