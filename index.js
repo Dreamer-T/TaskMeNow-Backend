@@ -2,9 +2,9 @@ require('dotenv').config();
 const express = require('express');
 const { createPool, closePool } = require('./db');
 const tasksRouter = require('./task');
-const userRouter = require('./user')
+const userRouter = require('./user');
 const authRouter = require('./auth');
-const companyRouter = require('./company')
+const companyRouter = require('./company');
 const authenticateToken = require('./authMiddleware');
 
 const app = express();
@@ -25,7 +25,7 @@ app.use(express.json());
     app.use('', companyRouter);
     // router for tasks
     app.use('/tasks', authenticateToken, tasksRouter);
-    app.use('/user', authenticateToken, userRouter);
+    app.use('/users', authenticateToken, userRouter);
 
     // change database, unused currently
     app.post('/change-database', async (req, res) => {
