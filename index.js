@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const { createPool, closePool } = require('./db');
 const tasksRouter = require('./task');
+const userRouter = require('./user')
 const authRouter = require('./auth');
 const companyRouter = require('./company')
 const authenticateToken = require('./authMiddleware');
@@ -24,9 +25,11 @@ app.use(express.json());
     app.use('', companyRouter);
     // router for tasks
     app.use('/tasks', authenticateToken, tasksRouter);
+    app.use('/user', authenticateToken, userRouter);
 
     // change database, unused currently
     app.post('/change-database', async (req, res) => {
+        res.status(200).end();//：直接结束响应，这相当于发送一个空的响应。
         const { dbName } = req.body;
 
         if (!dbName) {
