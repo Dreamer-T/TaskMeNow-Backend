@@ -58,7 +58,7 @@ router.post('/login', async (req, res) => {
 
         // JWT
         const token = jwt.sign({ id: user.ID, email: user.email }, JWT_SECRET, { expiresIn: '1h' }); // 返回令牌和用户信息
-        const groups = getGroupsFromDB(user.ID);
+        const groupReult = getGroupsFromDB(user.ID);
         res.status(200).json({
             message: '登录成功',
             'token': token,
@@ -70,7 +70,7 @@ router.post('/login', async (req, res) => {
                 avatar: user.avatar,
                 createdTime: user.createdTime,
                 // 这里还需要修改，添加查询Group的操作，通过查询Groups来得到GroupID
-                groups: groups.groupID
+                groups: groupReult.groupID
             },
             expiresIn: 3600  // 告知客户端令牌的过期时间
         })
