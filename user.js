@@ -21,12 +21,14 @@ router.get('/id/groups/:id', async (req, res) => {
     try {
         const groups = await getGroupsFromDB('SELECT * FROM GroupAndUser WHERE userID = ?;', [id]);
 
+        // get all the group id
         const groupIds = groups.map(group => group.groupID);
-
-        // 第二次查询，根据 GroupID 查询更多的组信息
+        // map id to generate a query
         const placeholders = groupIds.map(() => '?').join(',');
-        const groupDetailsQuery = `SELECT * FROM GroupTypes WHERE ID IN (${placeholders})`;
+        const groupDetailsQuery = `SELECT groupName FROM GroupTypes WHERE ID IN (${placeholders})`;
+        // get the result
         const groupDetails = await getGroupsFromDB(groupDetailsQuery, groupIds);
+        // use json to pass the result, which only contains group name
         res.status(200).json(groupDetails);
     } catch (error) {
         console.error('Error fetching task:', error);
