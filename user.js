@@ -14,10 +14,11 @@ const getGroupsFromDB = async (query, params = []) => {
         await conn.release();
     }
 };
+
 router.get('/id/groups/:id', async (req, res) => {
     const id = req.params.id;
     try {
-        const groups = await getGroupsFromDB('SELECT * FROM Groups WHERE userID = ?;', [id]);
+        const groups = await getGroupsFromDB('SELECT * FROM GroupAndUser WHERE userID = ?;', [id]);
         res.status(200).json(groups);
     } catch (error) {
         console.error('Error fetching task:', error);
