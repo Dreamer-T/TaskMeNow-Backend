@@ -7,6 +7,7 @@ const getGroupsFromDB = async (query, params = []) => {
     const pool = getPool();
     const conn = await pool.getConnection();
     try {
+        console.log(query);
         const [result] = await conn.query(query, params);
         console.log(result);
         return result;
@@ -20,7 +21,7 @@ router.get('/id/groups/:id', async (req, res) => {
     try {
         const groups = await getGroupsFromDB('SELECT * FROM GroupAndUser WHERE userID = ?;', [id]);
 
-        const groupIds = groups.map(group => group.GroupID);
+        const groupIds = groups.map(group => group.groupID);
 
         // 第二次查询，根据 GroupID 查询更多的组信息
         const placeholders = groupIds.map(() => '?').join(',');
