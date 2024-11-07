@@ -42,7 +42,7 @@ router.post('/createGroup', async (req, res) => {
             res.status(400).json({ error: 'Group name already exists' });
         }
         const insertResult = await groupOpFromDB('INSERT INTO GroupTypes (groupName) VALUES (?)', [groupName]);
-        res.status(200).send(`Group "${groupName}" has been created`);
+        res.status(200).json({ message: `Group "${groupName}" has been created` });
     } catch (error) {
         console.error('Error creating group:', error);
         res.status(500).json({ error: 'Database query error' });
@@ -60,27 +60,21 @@ router.post('/deleteGroup', async (req, res) => {
 
     try {
         // 检查该组是否存在
-        const result = await groupOpFromDB('SELECT * FROM GroupTypes WHERE groupName = ?', [groupName]);
-
-        // get all the group id
-        const groupIds = result.map(group => group.groupID);
-        // map id to generate a query
-        const placeholders = groupIds.map(() => '?').join(',');
-        const groupDetailsQuery = `DELETE FROM GroupTypes WHERE ID IN (${placeholders})`;
+        const result = await groupOpFromDB('SELECT ID FROM GroupTypes WHERE groupName = ?', [groupName]);
 
         if (result.length === 0) {
             // 如果找不到该组，返回错误
             res.status(400).json({ error: 'No such group' });
         }
-
-        // 删除该组
-        const deleteResult = await groupOpFromDB(groupDetailsQuery);
+        // delete group info from table
+        const deleteResult = await groupOpFromDB('DELETE FROM GroupTypes WHERE ID = ?', [result.ID]);
 
         if (deleteResult.affectedRows === 0) {
             res.status(500).json({ error: 'Failed to delete group' });
         }
-        groupDetailsQuery = `DELETE FROM GroupAndUser WHERE groupID IN (${placeholders})`;
-        deleteResult = await groupOpFromDB(groupDetailsQuery);
+
+        // delete relationship from table
+        deleteResult = await groupOpFromDB('DELETE FROM GroupAndUser WHERE groupID = ?', [result.ID]);
 
         if (deleteResult.affectedRows === 0) {
             res.status(500).json({ error: 'Failed to delete group' });
