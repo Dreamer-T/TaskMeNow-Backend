@@ -36,25 +36,29 @@ router.get('/id/groups/:id', async (req, res) => {
     }
 });
 
-router.post('/createGroup', async (req, res) => {
-    const { groupName } = req.body;  // 从请求体中获取 groupName
+// set a user as a member of a group
+router.post('/setGroup', async (req, res) => {
+    const { groupID, userID } = req.body;  // get groupID and userID from body
 
-    if (!groupName) {
-        res.status(400).json({ error: 'Group name is required' });
+    if (!userID) {
+        res.status(400).json({ error: 'User info is required' });
+    }
+    if (!groupID) {
+        res.status(400).json({ error: 'Group info is required' });
     }
     try {
-        // check whether group name has already existed
-        const result = await getGroupsFromDB('SELECT groupName FROM GroupTypes WHERE groupName = ?', [groupName]);
+        // check whether user is in the group
+        const result = await getGroupsFromDB('SELECT * FROM GroupAndUser WHERE groupID = ? AND userID = ?', [groupID, userID]);
         if (result.length > 0) {
-            res.status(400).json({ error: 'Group name already exists' });
+            res.status(400).json({ error: 'User is already in the group' });
         }
-        const insertResult = await getGroupsFromDB('INSERT INTO GroupTypes (groupName) VALUES (?)', [groupName]);
-        res.status(200).send(`Group "${groupName}" has been created`);
+        // if not, add the user into the group
+        const insertResult = await getGroupsFromDB('INSERT INTO GroupAndUser (groupID, userID) VALUES (?,?)', [groupID, userID]);
+        res.status(200).json({ message: 'User is added into the group successfully' });
     } catch (error) {
         console.error('Error creating group:', error);
         res.status(500).json({ error: 'Database query error' });
     }
 });
-
 
 module.exports = router;

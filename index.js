@@ -3,6 +3,7 @@ const express = require('express');
 const { createPool, closePool } = require('./db');
 const tasksRouter = require('./task');
 const userRouter = require('./user');
+const groupRouter = require('./group')
 const authRouter = require('./auth');
 const companyRouter = require('./company');
 const authenticateToken = require('./authMiddleware');
@@ -26,6 +27,7 @@ app.use(express.json());
     // router for tasks
     app.use('/tasks', authenticateToken, tasksRouter);
     app.use('/users', authenticateToken, userRouter);
+    app.use('/groups', authenticateToken, groupRouter);
 
     // change database, unused currently
     app.post('/change-database', async (req, res) => {
