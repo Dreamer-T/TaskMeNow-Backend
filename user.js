@@ -45,7 +45,7 @@ router.post('/createGroup', async (req, res) => {
     try {
         // check whether group name has already existed
         const result = await getGroupsFromDB('SELECT groupName FROM GroupTypes WHERE groupName = ?', [groupName]);
-        if (result[0].count > 0) {
+        if (result.length > 0) {
             res.status(400).json({ error: 'Group name already exists' });
         }
         const insertResult = await getGroupsFromDB('INSERT INTO GroupTypes (groupName) VALUES (?)', [groupName]);
