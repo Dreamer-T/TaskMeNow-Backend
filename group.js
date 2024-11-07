@@ -49,6 +49,26 @@ router.post('/createGroup', async (req, res) => {
     }
 });
 
+// API for changing a group
+router.post('/changeGroup', async (req, res) => {
+    const { oldGroupName, newGroupName } = req.body;  // 从请求体中获取 groupName
+
+    if (!oldGroupName || !newGroupName) {
+        res.status(400).json({ error: 'Group name is required' });
+    }
+    try {
+        // check whether group name has already existed
+        const result = await groupOpFromDB('SELECT groupName FROM GroupTypes WHERE groupName = ?', [oldGroupName]);
+        if (result.length === 0) {
+            res.status(400).json({ error: 'No such group' });
+        }
+        const updateResult = await groupOpFromDB('UPDATE GroupTypes SET groupName = ? WHERE groupName = ?', [newGroupName, oldGroupName]);
+        res.status(200).json({ message: `Group "${oldGroupName}" has been changed into "${newGroupName}` });
+    } catch (error) {
+        console.error('Error changing group:', error);
+        res.status(500).json({ error: 'Database query error' });
+    }
+});
 // API for deleting a group
 router.post('/deleteGroup', async (req, res) => {
     const { groupName } = req.body;  // 从请求体中获取 groupName
@@ -56,7 +76,6 @@ router.post('/deleteGroup', async (req, res) => {
     if (!groupName) {
         res.status(400).json({ error: 'Group name is required' });
     }
-
 
     try {
         // 检查该组是否存在
