@@ -75,10 +75,6 @@ router.post('/deleteGroup', async (req, res) => {
 
         // delete relationship from table
         deleteResult = await groupOpFromDB(`DELETE FROM GroupAndUser WHERE groupID = ${groupID}`, []);
-
-        if (deleteResult.affectedRows === 0) {
-            res.status(500).json({ error: 'Failed to delete group' });
-        }
         // 返回成功信息
         res.status(200).json({ message: `Group "${groupName}" has been deleted from table, relationships have been removed` });
 
