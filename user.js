@@ -31,9 +31,30 @@ router.get('/id/groups/:id', async (req, res) => {
         // use json to pass the result, which only contains group name
         res.status(200).json(groupDetails);
     } catch (error) {
-        console.error('Error fetching task:', error);
+        console.error('Error fetching group:', error);
         res.status(500).json({ error: 'Database query error' });
     }
 });
+
+router.post('/createGroup', async (req, res) => {
+    const { groupName } = req.body;  // 从请求体中获取 groupName
+
+    if (!groupName) {
+        res.status(400).json({ error: 'Group name is required' });
+    }
+    try {
+        // check whether group name has already existed
+        const result = await getGroupsFromDB('SELECT groupName FROM GroupTypes WHERE groupName = ?', [groupName]);
+        if (result[0].count > 0) {
+            res.status(400).json({ error: 'Group name already exists' });
+        }
+        const insertResult = await getGroupsFromDB('INSERT INTO GroupTypes (groupName) VALUES (?)', [groupName]);
+        res.status(200).send(`Group "${groupName}" has been created`);
+    } catch (error) {
+        console.error('Error creating group:', error);
+        res.status(500).json({ error: 'Database query error' });
+    }
+});
+
 
 module.exports = router;
