@@ -67,14 +67,14 @@ router.post('/deleteGroup', async (req, res) => {
         }
         const groupID = result[0].ID;
         // delete group info from table
-        const deleteResult = await groupOpFromDB(`DELETE FROM GroupTypes WHERE ID = ${groupID}`);
+        const deleteResult = await groupOpFromDB(`DELETE FROM GroupTypes WHERE ID = ${groupID}`, []);
 
         if (deleteResult.affectedRows === 0) {
             res.status(500).json({ error: 'Failed to delete group' });
         }
 
         // delete relationship from table
-        deleteResult = await groupOpFromDB(`DELETE FROM GroupAndUser WHERE groupID = ${groupID}`);
+        deleteResult = await groupOpFromDB(`DELETE FROM GroupAndUser WHERE groupID = ${groupID}`, []);
 
         if (deleteResult.affectedRows === 0) {
             res.status(500).json({ error: 'Failed to delete group' });
