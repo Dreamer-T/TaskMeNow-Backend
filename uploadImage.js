@@ -3,38 +3,65 @@ const multer = require('multer');
 const { Storage } = require('@google-cloud/storage');
 const router = express.Router();
 
-// 设置 multer 存储选项 (将文件保存到内存中)
 const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+const upload = multer({
+    storage: storage, limits: {
+        fileSize: 1 * 1024 * 1024  // 1MB
+    }
+});
 
-// 创建 GCS 客户端
+// GCS client
 const gcs = new Storage();
 
-// The ID of your GCS bucket
-const bucketName = 'tmn_company_logo_images';  // 替换为你自己的存储桶名称
+// The ID of GCS bucket
+const bucketName = 'tmn_company_logo_images';
 
-// POST 路由：用于上传图像
-router.post('/uploadImage', upload.single('file'), async (req, res) => {
-    // 检查是否有文件上传
+// API for user to upload avatar
+router.post('/uploadAvatar', upload.single('Avatar'), async (req, res) => {
+    // if file is included
     if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded.' });
     }
 
-    const file = req.file;  // 获取上传的文件
-    const destFileName = file.originalname;  // 使用原始文件名作为目标文件名
+    const file = req.file;  // get uploaded file
+    const destFileName = Date.now() + '-' + Math.round(Math.random() * 1E9) + file.originalname;  // unique file name
 
     try {
-        // 将文件上传到 Google Cloud Storage
-        await gcs.bucket(bucketName).file(destFileName).save(file.buffer, {
+        // upload file to Google Cloud Storage
+        await gcs.bucket(bucketName + "/UserAvatar").file(destFileName).save(file.buffer, {
             metadata: {
                 contentType: file.mimetype,
             },
         });
 
-        // 返回成功响应
         res.status(200).json({ message: `File uploaded successfully to ${bucketName}/${destFileName}` });
     } catch (error) {
-        console.error('Error uploading file:', error);
+        console.error('Error uploading avatar:', error);
+        res.status(500).json({ error: 'Failed to upload file to Cloud Storage' });
+    }
+});
+
+// API for user to upload avatar
+router.post('/uploadTaskImage', upload.single('TaskImage'), async (req, res) => {
+    // if file is included
+    if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded.' });
+    }
+
+    const file = req.file;  // get uploaded file
+    const destFileName = Date.now() + '-' + Math.round(Math.random() * 1E9) + file.originalname;  // unique file name
+
+    try {
+        // upload file to Google Cloud Storage
+        await gcs.bucket(bucketName + "/TaskImage").file(destFileName).save(file.buffer, {
+            metadata: {
+                contentType: file.mimetype,
+            },
+        });
+
+        res.status(200).json({ message: `File uploaded successfully to ${bucketName}/${destFileName}` });
+    } catch (error) {
+        console.error('Error uploading avatar:', error);
         res.status(500).json({ error: 'Failed to upload file to Cloud Storage' });
     }
 });
