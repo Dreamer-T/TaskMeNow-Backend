@@ -51,12 +51,39 @@ router.post('/setGroup', async (req, res) => {
         const result = await getGroupsFromDB('SELECT * FROM GroupAndUser WHERE groupID = ? AND userID = ?', [groupID, userID]);
         if (result.length > 0) {
             res.status(400).json({ error: 'User is already in the group' });
+        } else {
+            // if not, add the user into the group
+            const insertResult = await getGroupsFromDB('INSERT INTO GroupAndUser (groupID, userID) VALUES (?,?)', [groupID, userID]);
+            res.status(200).json({ message: 'User is added into the group successfully' });
         }
-        // if not, add the user into the group
-        const insertResult = await getGroupsFromDB('INSERT INTO GroupAndUser (groupID, userID) VALUES (?,?)', [groupID, userID]);
-        res.status(200).json({ message: 'User is added into the group successfully' });
     } catch (error) {
-        console.error('Error creating group:', error);
+        console.error('Error setting user\'s group: ', error);
+        res.status(500).json({ error: 'Database query error' });
+    }
+});
+
+// delete a user from a group
+router.post('/setGroup', async (req, res) => {
+    const { groupID, userID } = req.body;  // get groupID and userID from body
+
+    if (!userID) {
+        res.status(400).json({ error: 'User info is required' });
+    }
+    if (!groupID) {
+        res.status(400).json({ error: 'Group info is required' });
+    }
+    try {
+        // check whether user is in the group
+        const result = await getGroupsFromDB('SELECT * FROM GroupAndUser WHERE groupID = ? AND userID = ?', [groupID, userID]);
+        if (result.length === 0) {
+            res.status(400).json({ error: 'User is not in the group' });
+        } else {
+            // if not, add the user into the group
+            const deleteResult = await getGroupsFromDB('DELETE FROM GroupAndUser WHERE groupID = ? AND userID = ?', [groupID, userID]);
+            res.status(200).json({ message: 'User is deleted from the group successfully' });
+        }
+    } catch (error) {
+        console.error('Error setting user\'s group: ', error);
         res.status(500).json({ error: 'Database query error' });
     }
 });

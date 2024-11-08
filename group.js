@@ -69,6 +69,7 @@ router.post('/changeGroup', async (req, res) => {
         res.status(500).json({ error: 'Database query error' });
     }
 });
+
 // API for deleting a group
 router.post('/deleteGroup', async (req, res) => {
     const { groupName } = req.body;  // 从请求体中获取 groupName
