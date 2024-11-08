@@ -7,7 +7,7 @@ const groupRouter = require('./group')
 const authRouter = require('./auth');
 const companyRouter = require('./company');
 
-const uploadImageRouter = require('./image')
+const imageRouter = require('./image')
 const authenticateToken = require('./authMiddleware');
 
 const app = express();
@@ -30,7 +30,7 @@ app.use(express.json());
     app.use('/tasks', authenticateToken, tasksRouter);
     app.use('/users', authenticateToken, userRouter);
     app.use('/groups', authenticateToken, groupRouter);
-    app.use('/images', uploadImageRouter);
+    app.use('/images', imageRouter);
 
     // change database, unused currently
     app.post('/change-database', async (req, res) => {
