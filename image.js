@@ -67,8 +67,8 @@ router.post('/uploadTaskImage', upload.single('TaskImage'), async (req, res) => 
 });
 
 // GET image
-router.get('/getImage/:fileName', async (req, res) => {
-    const fileName = req.params.fileName;
+router.get('/getImage', async (req, res) => {
+    const { fileName } = req.body;
     const file = gcs.bucket(bucketName).file(fileName);  // get file from GCS
 
     try {
