@@ -24,11 +24,11 @@ router.post('/uploadAvatar', upload.single('Avatar'), async (req, res) => {
     }
 
     const file = req.file;  // get uploaded file
-    const destFileName = Date.now() + '-' + Math.round(Math.random() * 1E9) + file.originalname;  // unique file name
+    const destFileName = "UserAvatar/" + Date.now() + '-' + Math.round(Math.random() * 1E9) + file.originalname;  // unique file name
 
     try {
         // upload file to Google Cloud Storage
-        await gcs.bucket(bucketName + "/UserAvatar").file(destFileName).save(file.buffer, {
+        await gcs.bucket(bucketName).file(destFileName).save(file.buffer, {
             metadata: {
                 contentType: file.mimetype,
             },
@@ -49,11 +49,11 @@ router.post('/uploadTaskImage', upload.single('TaskImage'), async (req, res) => 
     }
 
     const file = req.file;  // get uploaded file
-    const destFileName = Date.now() + '-' + Math.round(Math.random() * 1E9) + file.originalname;  // unique file name
+    const destFileName = "TaskImage/" + Date.now() + '-' + Math.round(Math.random() * 1E9) + file.originalname;  // unique file name
 
     try {
         // upload file to Google Cloud Storage
-        await gcs.bucket(bucketName + "/TaskImage").file(destFileName).save(file.buffer, {
+        await gcs.bucket(bucketName).file(destFileName).save(file.buffer, {
             metadata: {
                 contentType: file.mimetype,
             },
