@@ -48,14 +48,22 @@ router.post('/setGroup', async (req, res) => {
     }
     try {
         // check whether user is in the group
-        const result = await getGroupsFromDB('SELECT * FROM GroupAndUser WHERE groupID = ? AND userID = ?', [groupID, userID]);
+        let result = await getGroupsFromDB('SELECT * FROM GroupAndUser WHERE groupID = ? AND userID = ?', [groupID, userID]);
         if (result.length > 0) {
-            res.status(400).json({ error: 'User is already in the group' });
-        } else {
-            // if not, add the user into the group
-            const insertResult = await getGroupsFromDB('INSERT INTO GroupAndUser (groupID, userID) VALUES (?,?)', [groupID, userID]);
-            res.status(200).json({ message: 'User is added into the group successfully' });
+            return res.status(400).json({ error: 'User is already in the group' });
         }
+        result = await getGroupsFromDB('SELECT * FROM GroupTypes WHERE ID = ?', [groupID]);
+        if (result.length === 0) {
+            return res.status(400).json({ error: 'No such group' });
+        }
+        result = await getGroupsFromDB('SELECT * FROM Users WHERE ID = ?', [userID]);
+        if (result.length === 0) {
+            return res.status(400).json({ error: 'No such user' });
+        }
+        // if not, add the user into the group
+        const insertResult = await getGroupsFromDB('INSERT INTO GroupAndUser (groupID, userID) VALUES (?,?)', [groupID, userID]);
+        res.status(200).json({ message: 'User is added into the group successfully' });
+
     } catch (error) {
         console.error('Error setting user\'s group: ', error);
         res.status(500).json({ error: 'Database query error' });
