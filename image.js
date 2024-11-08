@@ -65,35 +65,37 @@ router.post('/uploadTaskImage', upload.single('TaskImage'), async (req, res) => 
         res.status(500).json({ error: 'Failed to upload file to Cloud Storage' });
     }
 });
-
-// GET image
 router.get('/getImage', async (req, res) => {
-    const { fileName } = req.body;
-    const file = gcs.bucket(bucketName).file(fileName);  // get file from GCS
+    const { fileName } = req.query;  // 从查询参数获取 fileName
+
+    if (!fileName) {
+        return res.status(400).json({ error: 'fileName is required' });
+    }
+
+    const file = gcs.bucket(bucketName).file(fileName);  // 获取 GCS 中的文件
 
     try {
-        // check whether file exists or not
+        // 检查文件是否存在
         const [exists] = await file.exists();
         if (!exists) {
             return res.status(404).json({ error: `File "${fileName}" not found in the bucket` });
         }
 
+        // 创建文件读取流并将其管道输出到响应中
         file.createReadStream()
             .on('error', (err) => {
                 console.error('Error downloading file:', err);
                 res.status(500).json({ error: 'Error downloading file from GCS' });
             })
-            // debug output
             .on('end', () => {
                 console.log('File transfer complete');
             })
-            .pipe(res);
-
-        res.status(200);
+            .pipe(res);  // 将文件流直接传递给客户端
     } catch (error) {
         console.error('Error fetching file:', error);
         res.status(500).json({ error: 'Failed to fetch file from GCS' });
     }
 });
+
 
 module.exports = router;
