@@ -7,7 +7,7 @@ const groupRouter = require('./group')
 const authRouter = require('./auth');
 const companyRouter = require('./company');
 
-const uploadImageRouter = require('./uploadImage')
+const uploadImageRouter = require('./image')
 const authenticateToken = require('./authMiddleware');
 
 const app = express();
