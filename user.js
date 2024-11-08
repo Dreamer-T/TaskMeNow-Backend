@@ -63,7 +63,7 @@ router.post('/setGroup', async (req, res) => {
 });
 
 // delete a user from a group
-router.post('/setGroup', async (req, res) => {
+router.post('/deleteFromGroup', async (req, res) => {
     const { groupID, userID } = req.body;  // get groupID and userID from body
 
     if (!userID) {
