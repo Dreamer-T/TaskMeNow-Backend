@@ -32,7 +32,7 @@ const getGroupsFromDB = async (id) => {
     const pool = getPool();
     const conn = await pool.getConnection();
     try {
-        const [result] = await conn.query("SELECT * FROM Groups WHERE userID = ?;", id);
+        const [result] = await conn.query("SELECT * FROM GroupAndUser WHERE userID = ?;", id);
         console.log(result);
         return result;
     } finally {
