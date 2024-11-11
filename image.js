@@ -54,7 +54,7 @@ router.post('/uploadAvatar', authorizeRole('Staff'), upload.single('Avatar'), as
         const token = req.header('Authorization')?.split(' ')[1];
         const decoded = jwt.verify(token, JWT_SECRET);
         const userID = decoded.id;
-        const update = await queryToDB('UPDATE Users SET avatar = ? WHERE userID = ?;', [avatarURL, userID]);
+        const update = await queryToDB('UPDATE Users SET avatar = ? WHERE ID = ?;', [avatarURL, userID]);
         res.status(200).json({ message: `File uploaded successfully!`, fileLocation: avatarURL });
     } catch (error) {
         console.error('Error uploading avatar:', error);
