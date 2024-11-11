@@ -40,7 +40,6 @@ router.post('/login', async (req, res) => {
         const groupReult = getGroupsFromDB(user.ID);
         res.status(200).json({
             message: '登录成功',
-            'token': token,
             user: {
                 id: user.ID,
                 userName: user.userName,
@@ -48,6 +47,7 @@ router.post('/login', async (req, res) => {
                 role: user.userRole, // 返回用户角色或其他必要信息
                 avatar: user.avatar,
                 createdTime: user.createdTime,
+                'token': token,
                 // 这里还需要修改，添加查询Group的操作，通过查询Groups来得到GroupID
                 groups: groupReult.groupID
             },
