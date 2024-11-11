@@ -1,6 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const { Storage } = require('@google-cloud/storage');
+const { authorizeRole } = require('./authMiddleware');
 const router = express.Router();
 
 const storage = multer.memoryStorage();
@@ -17,7 +18,7 @@ const gcs = new Storage();
 const bucketName = 'tmn_company_logo_images';
 
 // API for user to upload avatar
-router.post('/uploadAvatar', upload.single('Avatar'), async (req, res) => {
+router.post('/uploadAvatar', authorizeRole('Staff'), upload.single('Avatar'), async (req, res) => {
     // if file is included
     if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded.' });
@@ -42,7 +43,7 @@ router.post('/uploadAvatar', upload.single('Avatar'), async (req, res) => {
 });
 
 // API for user to upload avatar
-router.post('/uploadTaskImage', upload.single('TaskImage'), async (req, res) => {
+router.post('/uploadTaskImage', authorizeRole('Staff'), upload.single('TaskImage'), async (req, res) => {
     // if file is included
     if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded.' });
@@ -65,7 +66,9 @@ router.post('/uploadTaskImage', upload.single('TaskImage'), async (req, res) => 
         res.status(500).json({ error: 'Failed to upload file to Cloud Storage' });
     }
 });
-router.get('/getImage', async (req, res) => {
+
+//get image from cloud storage
+router.get('/getImage', authorizeRole('Staff'), async (req, res) => {
     const { fileName } = req.query;  // 从查询参数获取 fileName
 
     if (!fileName) {

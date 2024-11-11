@@ -3,30 +3,9 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { getPool, getUserByUseremail } = require('./db');
 
+
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
-
-
-// user registration
-router.post('/register_user', async (req, res) => {
-    const { username, email, password, role } = req.body;
-    const pool = getPool();
-    const conn = await pool.getConnection();
-
-    try {
-        // 加密密码
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        await conn.query('INSERT INTO Users (email, password, userName, userRole) VALUES (?, ?, ?, ?)', [email, hashedPassword, username, role]);
-
-        res.status(200).json({ message: 'User registered successfully' });
-    } catch (error) {
-        console.error('Error during user registration:', error);
-        res.status(500).json({ Error: error });
-    } finally {
-        await conn.release();
-    }
-});
 
 const getGroupsFromDB = async (id) => {
     const pool = getPool();
@@ -57,7 +36,7 @@ router.post('/login', async (req, res) => {
         }
 
         // JWT
-        const token = jwt.sign({ id: user.ID, email: user.email }, JWT_SECRET, { expiresIn: '1h' }); // 返回令牌和用户信息
+        const token = jwt.sign({ id: user.ID, email: user.email, role: user.userRole }, JWT_SECRET, { expiresIn: '1h' }); // 返回令牌和用户信息
         const groupReult = getGroupsFromDB(user.ID);
         res.status(200).json({
             message: '登录成功',

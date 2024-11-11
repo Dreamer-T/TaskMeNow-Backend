@@ -1,5 +1,7 @@
 const express = require('express');
 const { getPool } = require('./db');
+const { authorizeRole } = require('./authMiddleware');
+const bcrypt = require('bcrypt');
 
 const router = express.Router();
 
@@ -9,13 +11,33 @@ const getGroupsFromDB = async (query, params = []) => {
     try {
         console.log(query);
         const [result] = await conn.query(query, params);
-        console.log(result);
+        // console.log(result);
         return result;
     } finally {
         await conn.release();
     }
 };
 
+// user registration, only Manager can register a new user
+router.post('/register_user', authorizeRole('Manager'), async (req, res) => {
+    const { username, email, password, role } = req.body;
+    const pool = getPool();
+    const conn = await pool.getConnection();
+
+    try {
+        // 加密密码
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        await conn.query('INSERT INTO Users (email, password, userName, userRole) VALUES (?, ?, ?, ?)', [email, hashedPassword, username, role]);
+
+        res.status(200).json({ message: 'User registered successfully' });
+    } catch (error) {
+        console.error('Error during user registration:', error);
+        res.status(500).json({ Error: error });
+    } finally {
+        await conn.release();
+    }
+});
 router.get('/id/groups/:id', async (req, res) => {
     const id = req.params.id;
     try {
@@ -37,7 +59,7 @@ router.get('/id/groups/:id', async (req, res) => {
 });
 
 // set a user as a member of a group
-router.post('/setGroup', async (req, res) => {
+router.post('/setGroup', authorizeRole('Manager'), async (req, res) => {
     const { groupID, userID } = req.body;  // get groupID and userID from body
 
     if (!userID) {
@@ -71,7 +93,7 @@ router.post('/setGroup', async (req, res) => {
 });
 
 // delete a user from a group
-router.post('/deleteFromGroup', async (req, res) => {
+router.post('/deleteFromGroup', authorizeRole('Manager'), async (req, res) => {
     const { groupID, userID } = req.body;  // get groupID and userID from body
 
     if (!userID) {

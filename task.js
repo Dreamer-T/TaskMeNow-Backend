@@ -1,5 +1,6 @@
 const express = require('express');
 const { getPool } = require('./db');
+const { authorizeRole } = require('./authMiddleware');
 
 const router = express.Router();
 
@@ -28,7 +29,7 @@ const createTaskInDB = async (query, params = []) => {
     }
 };
 
-router.get('/id/:id', async (req, res) => {
+router.get('/id/:id', authorizeRole('Staff'), async (req, res) => {
     const id = req.params.id;
     try {
         const task = await getTasksFromDB('SELECT * FROM Tasks WHERE id = ?;', [id]);
@@ -39,7 +40,7 @@ router.get('/id/:id', async (req, res) => {
     }
 });
 
-router.get('/assignedTo/:assignedTo', async (req, res) => {
+router.get('/assignedTo/:assignedTo', authorizeRole('Supervisor'), async (req, res) => {
     const assignedTo = req.params.assignedTo;
     try {
         const task = await getTasksFromDB('SELECT * FROM Tasks WHERE assignedTo = ?', [assignedTo])
@@ -52,8 +53,8 @@ router.get('/assignedTo/:assignedTo', async (req, res) => {
 })
 
 
-// API of create task
-router.post('/createTask', async (req, res) => {
+// API of create task, at least to be a staff
+router.post('/createTask', authorizeRole('Staff'), async (req, res) => {
     const { taskDescription, taskImage, assignedTo, createdBy, urgencyLevel } = req.body;
 
     // check those are necessary

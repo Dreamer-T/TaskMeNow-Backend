@@ -1,5 +1,6 @@
 const express = require('express');
 const { getPool } = require('./db');
+const { authorizeRole } = require('./authMiddleware');
 
 const router = express.Router();
 
@@ -29,7 +30,7 @@ router.get('/getGroups', async (req, res) => {
 });
 
 // API for creating a group
-router.post('/createGroup', async (req, res) => {
+router.post('/createGroup', authorizeRole('Manager'), async (req, res) => {
     const { groupName } = req.body;  // 从请求体中获取 groupName
 
     if (!groupName) {
