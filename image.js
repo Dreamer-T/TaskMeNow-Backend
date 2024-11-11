@@ -3,6 +3,9 @@ const multer = require('multer');
 const { Storage } = require('@google-cloud/storage');
 const { authorizeRole } = require('./authMiddleware');
 const router = express.Router();
+const jwt = require('jsonwebtoken');
+const { getPool } = require('./db');
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
 const storage = multer.memoryStorage();
 const upload = multer({
@@ -17,6 +20,19 @@ const gcs = new Storage();
 // The ID of GCS bucket
 const bucketName = 'tmn_company_logo_images';
 
+
+const queryToDB = async (query, params = []) => {
+    const pool = getPool();
+    const conn = await pool.getConnection();
+    try {
+        console.log(query);
+        const [result] = await conn.query(query, params);
+        // console.log(result);
+        return result;
+    } finally {
+        await conn.release();
+    }
+};
 // API for user to upload avatar
 router.post('/uploadAvatar', authorizeRole('Staff'), upload.single('Avatar'), async (req, res) => {
     // if file is included
@@ -34,8 +50,11 @@ router.post('/uploadAvatar', authorizeRole('Staff'), upload.single('Avatar'), as
                 contentType: file.mimetype,
             },
         });
-
-        res.status(200).json({ message: `File uploaded successfully to ${bucketName}/${destFileName}` });
+        const avatarURL = `https://storage.googleapis.com/${bucketName}/${destFileName}`;
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const userID = decoded.id;
+        const update = await queryToDB('UPDATE GroupAndUser SET avatar = ? WHERE userID = ?;', [avatarURL, userID]);
+        res.status(200).json({ message: `File uploaded successfully!`, fileLocation: avatarURL });
     } catch (error) {
         console.error('Error uploading avatar:', error);
         res.status(500).json({ error: 'Failed to upload file to Cloud Storage' });
