@@ -51,6 +51,7 @@ router.post('/uploadAvatar', authorizeRole('Staff'), upload.single('Avatar'), as
             },
         });
         const avatarURL = `https://storage.googleapis.com/${bucketName}/${destFileName}`;
+        const token = req.header('Authorization')?.split(' ')[1];
         const decoded = jwt.verify(token, JWT_SECRET);
         const userID = decoded.id;
         const update = await queryToDB('UPDATE GroupAndUser SET avatar = ? WHERE userID = ?;', [avatarURL, userID]);
