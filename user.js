@@ -5,7 +5,7 @@ const bcrypt = require('bcrypt');
 
 const router = express.Router();
 
-const getGroupsFromDB = async (query, params = []) => {
+const SQLExecutor = async (query, params = []) => {
     const pool = getPool();
     const conn = await pool.getConnection();
     try {
@@ -38,10 +38,24 @@ router.post('/register_user', authorizeRole('Manager'), async (req, res) => {
         await conn.release();
     }
 });
+
+// API for manager to get all users info
+router.get('/allUsers', authorizeRole('Manager'), async (req, res) => {
+    try {
+        const users = await SQLExecutor('SELECT * FROM Users;', []);
+
+        // use json to pass the result
+        res.status(200).json(users);
+    } catch (error) {
+        console.error('Error fetching group:', error);
+        res.status(500).json({ error: 'Database query error' });
+    }
+});
+
 router.get('/id/groups/:id', async (req, res) => {
     const id = req.params.id;
     try {
-        const groups = await getGroupsFromDB('SELECT * FROM GroupAndUser WHERE userID = ?;', [id]);
+        const groups = await SQLExecutor('SELECT * FROM GroupAndUser WHERE userID = ?;', [id]);
 
         // get all the group id
         const groupIds = groups.map(group => group.groupID);
@@ -49,7 +63,7 @@ router.get('/id/groups/:id', async (req, res) => {
         const placeholders = groupIds.map(() => '?').join(',');
         const groupDetailsQuery = `SELECT groupName FROM GroupTypes WHERE ID IN (${placeholders})`;
         // get the result
-        const groupDetails = await getGroupsFromDB(groupDetailsQuery, groupIds);
+        const groupDetails = await SQLExecutor(groupDetailsQuery, groupIds);
         // use json to pass the result, which only contains group name
         res.status(200).json(groupDetails);
     } catch (error) {
@@ -70,20 +84,20 @@ router.post('/setGroup', authorizeRole('Manager'), async (req, res) => {
     }
     try {
         // check whether user is in the group
-        let result = await getGroupsFromDB('SELECT * FROM GroupAndUser WHERE groupID = ? AND userID = ?', [groupID, userID]);
+        let result = await SQLExecutor('SELECT * FROM GroupAndUser WHERE groupID = ? AND userID = ?', [groupID, userID]);
         if (result.length > 0) {
             return res.status(400).json({ error: 'User is already in the group' });
         }
-        result = await getGroupsFromDB('SELECT * FROM GroupTypes WHERE ID = ?', [groupID]);
+        result = await SQLExecutor('SELECT * FROM GroupTypes WHERE ID = ?', [groupID]);
         if (result.length === 0) {
             return res.status(400).json({ error: 'No such group' });
         }
-        result = await getGroupsFromDB('SELECT * FROM Users WHERE ID = ?', [userID]);
+        result = await SQLExecutor('SELECT * FROM Users WHERE ID = ?', [userID]);
         if (result.length === 0) {
             return res.status(400).json({ error: 'No such user' });
         }
         // if not, add the user into the group
-        const insertResult = await getGroupsFromDB('INSERT INTO GroupAndUser (groupID, userID) VALUES (?,?)', [groupID, userID]);
+        const insertResult = await SQLExecutor('INSERT INTO GroupAndUser (groupID, userID) VALUES (?,?)', [groupID, userID]);
         res.status(200).json({ message: 'User is added into the group successfully' });
 
     } catch (error) {
@@ -104,12 +118,12 @@ router.post('/deleteFromGroup', authorizeRole('Manager'), async (req, res) => {
     }
     try {
         // check whether user is in the group
-        const result = await getGroupsFromDB('SELECT * FROM GroupAndUser WHERE groupID = ? AND userID = ?', [groupID, userID]);
+        const result = await SQLExecutor('SELECT * FROM GroupAndUser WHERE groupID = ? AND userID = ?', [groupID, userID]);
         if (result.length === 0) {
             res.status(400).json({ error: 'User is not in the group' });
         } else {
             // if not, add the user into the group
-            const deleteResult = await getGroupsFromDB('DELETE FROM GroupAndUser WHERE groupID = ? AND userID = ?', [groupID, userID]);
+            const deleteResult = await SQLExecutor('DELETE FROM GroupAndUser WHERE groupID = ? AND userID = ?', [groupID, userID]);
             res.status(200).json({ message: 'User is deleted from the group successfully' });
         }
     } catch (error) {
