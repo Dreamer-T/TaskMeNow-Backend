@@ -39,8 +39,8 @@ router.post('/register_user', authorizeRole('Manager'), async (req, res) => {
     }
 });
 
-// API for manager to get all users info
-router.get('/allUsers', authorizeRole('Manager'), async (req, res) => {
+// API for user to get all users info, for assignment use
+router.get('/allUsers', authorizeRole('Staff'), async (req, res) => {
     try {
         const users = await SQLExecutor('SELECT * FROM Users;', []);
 
