@@ -79,8 +79,8 @@ router.post('/uploadTaskImage', authorizeRole('Staff'), upload.single('TaskImage
                 contentType: file.mimetype,
             },
         });
-
-        res.status(200).json({ message: `File uploaded successfully to ${bucketName}/${destFileName}` });
+        const avatarURL = `https://storage.googleapis.com/${bucketName}/${destFileName}`;
+        res.status(200).json({ message: `File uploaded successfully!`, fileLocation: avatarURL });
     } catch (error) {
         console.error('Error uploading avatar:', error);
         res.status(500).json({ error: 'Failed to upload file to Cloud Storage' });
