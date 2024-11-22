@@ -42,15 +42,34 @@ router.post('/register_user', authorizeRole('Manager'), async (req, res) => {
 // API for user to get all users info, for assignment use
 router.get('/allUsers', authorizeRole('Staff'), async (req, res) => {
     try {
-        const users = await SQLExecutor('SELECT ID,userName,email,userRole,avatar,createdTime FROM Users;', []);
+        // 查询所有用户
+        const users = await SQLExecutor('SELECT ID, userName, email, userRole, avatar, createdTime FROM Users;', []);
 
-        // use json to pass the result
-        res.status(200).json(users);
+        // 使用 Promise.all 并行查询每个用户对应的所有 groupID 和 groupName
+        const usersWithGroups = await Promise.all(users.map(async (user) => {
+            // 查询当前用户对应的所有 groupID
+            const groupResults = await SQLExecutor('SELECT groupID FROM GroupAndUser WHERE userID = ?;', [user.ID]);
+
+            // 查询每个 groupID 对应的 groupName
+            const groupNames = await Promise.all(groupResults.map(async (group) => {
+                const groupDetails = await SQLExecutor('SELECT groupName FROM GroupTypes WHERE ID = ?;', [group.groupID]);
+                return groupDetails.length > 0 ? groupDetails[0].groupName : null; // 获取 groupName
+            }));
+
+            // 将所有的 groupNames 添加到 user 对象中
+            user.groupNames = groupNames.filter(name => name !== null); // 过滤掉可能的 null 值
+            return user; // 返回包含所有 groupNames 的用户数据
+        }));
+
+        // 返回合并后的用户数据
+        res.status(200).json(usersWithGroups);
     } catch (error) {
-        console.error('Error fetching group:', error);
+        console.error('Error fetching users and groups:', error);
         res.status(500).json({ error: 'Database query error' });
     }
 });
+
+
 
 router.get('/id/groups/:id', async (req, res) => {
     const id = req.params.id;
