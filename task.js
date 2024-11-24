@@ -4,25 +4,13 @@ const { authorizeRole } = require('./authMiddleware');
 
 const router = express.Router();
 
-const getTasksFromDB = async (query, params = []) => {
+const SQLExecutor = async (query, params = []) => {
     const pool = getPool();
     const conn = await pool.getConnection();
     try {
         // console.log(query, params);
         const [result] = await conn.query(query, params);
-        console.log(result);
-        return result;
-    } finally {
-        await conn.release();
-    }
-};
-
-
-const createTaskInDB = async (query, params = []) => {
-    const pool = getPool();
-    const conn = await pool.getConnection();
-    try {
-        const [result] = await conn.query(query, params);
+        // console.log(result);
         return result;
     } finally {
         await conn.release();
@@ -32,7 +20,7 @@ const createTaskInDB = async (query, params = []) => {
 router.get('/id/:id', authorizeRole('Staff'), async (req, res) => {
     const id = req.params.id;
     try {
-        const task = await getTasksFromDB('SELECT * FROM Tasks WHERE id = ?;', [id]);
+        const task = await SQLExecutor('SELECT * FROM Tasks WHERE id = ?;', [id]);
         res.status(200).json(task);
     } catch (error) {
         console.error('Error fetching task:', error);
@@ -44,7 +32,7 @@ router.get('/assignedTo/:assignedTo', authorizeRole('Staff'), async (req, res) =
     const assignedTo = req.params.assignedTo;
     try {
         // get all tasks
-        const tasks = await getTasksFromDB('SELECT * FROM Tasks WHERE assignedTo = ?', [assignedTo]);
+        const tasks = await SQLExecutor('SELECT * FROM Tasks WHERE assignedTo = ?', [assignedTo]);
 
         // get creatorName of each task
         const tasksWithCreator = await Promise.all(tasks.map(async (task) => {
@@ -76,7 +64,7 @@ router.post('/createTask', authorizeRole('Staff'), async (req, res) => {
     try {
         const query = 'INSERT INTO Tasks (taskDescription, taskImage, assignedTo, createdBy, urgencyLevel) VALUES (?, ?, ?, ?, ?)';
         const values = [taskDescription, taskImage || null, assignedTo, createdBy, urgencyLevel];
-        const result = await createTaskInDB(query, values);
+        const result = await SQLExecutor(query, values);
 
         res.status(200).json({ message: 'Task created successfully', taskId: result.insertId });
     } catch (error) {
