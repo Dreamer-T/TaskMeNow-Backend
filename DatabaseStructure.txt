@@ -10,6 +10,8 @@ Database Name: MainDatabase
      - createdTime - DATETIME - NOT NULL - Auto-generated
      - urgencyLevel - INT - NOT NULL - Level of urgency (1, 2, 3, 4; higher values indicate greater urgency)
      - isDone - ENUM - NOT NULL - [1: Done, 0: Not done]
+     - lastModifiedTime - DATETIME - - Time of last modification, default will be the create Time
+     - finishedTime - DATETIME - - Time of finish
 
 2. Table Name: Users
    - Fields:
