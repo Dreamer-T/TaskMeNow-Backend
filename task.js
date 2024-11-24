@@ -43,14 +43,25 @@ router.get('/id/:id', authorizeRole('Staff'), async (req, res) => {
 router.get('/assignedTo/:assignedTo', authorizeRole('Staff'), async (req, res) => {
     const assignedTo = req.params.assignedTo;
     try {
-        const task = await getTasksFromDB('SELECT * FROM Tasks WHERE assignedTo = ?', [assignedTo])
-        console.log(task);
-        res.status(200).json(task);
+        // get all tasks
+        const tasks = await getTasksFromDB('SELECT * FROM Tasks WHERE assignedTo = ?', [assignedTo]);
+
+        // get creatorName of each task
+        const tasksWithCreator = await Promise.all(tasks.map(async (task) => {
+            // get userName via Users according to createdBy
+            const creatorResult = await SQLExecutor('SELECT userName FROM Users WHERE ID = ?', [task.createdBy]);
+            // include creatorName in json
+            task.creatorName = creatorResult.length > 0 ? creatorResult[0].userName : null;
+            return task;
+        }));
+
+        res.status(200).json(tasksWithCreator);
     } catch (error) {
-        console.error('Error fetching task:', error);
+        console.error('Error fetching tasks and creator:', error);
         res.status(500).json({ error: 'Database query error' });
     }
-})
+});
+
 
 
 // API of create task, at least to be a staff
