@@ -40,7 +40,7 @@ router.get('/id/:id', authorizeRole('Staff'), async (req, res) => {
     }
 });
 
-router.get('/assignedTo/:assignedTo', authorizeRole('Supervisor'), async (req, res) => {
+router.get('/assignedTo/:assignedTo', authorizeRole('Staff'), async (req, res) => {
     const assignedTo = req.params.assignedTo;
     try {
         const task = await getTasksFromDB('SELECT * FROM Tasks WHERE assignedTo = ?', [assignedTo])
