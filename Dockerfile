@@ -22,3 +22,4 @@ ENV DB_USER=root
 ENV DB_PASSWORD=taskme103
 ENV DB_NAME=MainDatabase
 ENV JWT_SECRET=SECRETXPASS
+ENV BUCKETURL=https://storage.googleapis.com

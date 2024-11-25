@@ -6,6 +6,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { getPool } = require('./db');
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
+const BUCKETURL = process.env.BUCKETURL || 'https://storage.googleapis.com';
 
 const storage = multer.memoryStorage();
 const upload = multer({
@@ -50,7 +51,7 @@ router.post('/uploadAvatar', authorizeRole('Staff'), upload.single('Avatar'), as
                 contentType: file.mimetype,
             },
         });
-        const avatarURL = `https://storage.googleapis.com/${bucketName}/${destFileName}`;
+        const avatarURL = `${BUCKETURL}/${bucketName}/${destFileName}`;
         const token = req.header('Authorization')?.split(' ')[1];
         const decoded = jwt.verify(token, JWT_SECRET);
         const userID = decoded.id;
@@ -79,7 +80,7 @@ router.post('/uploadTaskImage', authorizeRole('Staff'), upload.single('TaskImage
                 contentType: file.mimetype,
             },
         });
-        const avatarURL = `https://storage.googleapis.com/${bucketName}/${destFileName}`;
+        const avatarURL = `${BUCKETURL}/${bucketName}/${destFileName}`;
         res.status(200).json({ message: `File uploaded successfully!`, fileLocation: avatarURL });
     } catch (error) {
         console.error('Error uploading avatar:', error);
