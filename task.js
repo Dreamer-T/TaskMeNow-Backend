@@ -73,4 +73,26 @@ router.post('/createTask', authorizeRole('Staff'), async (req, res) => {
     }
 });
 
+
+// API of complete task, at least to be a staff
+router.post('/completeTask', authorizeRole('Staff'), async (req, res) => {
+    const { taskID } = req.body;
+
+    // check those are necessary
+    if (!taskID) {
+        return res.status(400).json({ error: 'Missing taskID' });
+    }
+
+    try {
+        const query = 'UPDATE Tasks SET isDone = \'1\' WHERE ID = ?';
+        const values = [taskID];
+        const result = await SQLExecutor(query, values);
+
+        res.status(200).json({ message: 'Task compelte successfully' });
+    } catch (error) {
+        console.error('Error creating task:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
 module.exports = router;
