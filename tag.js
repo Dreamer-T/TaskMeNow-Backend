@@ -10,12 +10,12 @@ const SQLExecutor = async (query, params = []) => {
     try {
         console.log(query);
         const [result] = await conn.query(query, params);
-        console.log(result);
         return result;
     } finally {
         await conn.release();
     }
 };
+
 
 // API for getting all the tags
 router.get('/getTags', async (req, res) => {

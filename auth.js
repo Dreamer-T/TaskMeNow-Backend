@@ -7,7 +7,7 @@ const { getPool, getUserByUseremail } = require('./db');
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
-const getGroupsFromDB = async (id) => {
+const getTagsFromDB = async (id) => {
     const pool = getPool();
     const conn = await pool.getConnection();
     try {
@@ -37,7 +37,7 @@ router.post('/login', async (req, res) => {
 
         // JWT
         const token = jwt.sign({ id: user.ID, email: user.email, role: user.userRole }, JWT_SECRET, { expiresIn: '1h' }); // 返回令牌和用户信息
-        const groupReult = getGroupsFromDB(user.ID);
+        const tagReult = getTagsFromDB(user.ID);
         res.status(200).json({
             message: '登录成功',
             user: {
@@ -48,8 +48,8 @@ router.post('/login', async (req, res) => {
                 avatar: user.avatar,
                 createdTime: user.createdTime,
                 'token': token,
-                // 这里还需要修改，添加查询Group的操作，通过查询Groups来得到GroupID
-                groups: groupReult.tagID
+                // 这里还需要修改，添加查询Tag的操作，通过查询Tags来得到TagID
+                tags: tagReult.tagID
             },
             expiresIn: 3600  // 告知客户端令牌的过期时间
         })

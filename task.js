@@ -8,14 +8,14 @@ const SQLExecutor = async (query, params = []) => {
     const pool = getPool();
     const conn = await pool.getConnection();
     try {
-        // console.log(query, params);
+        console.log(query);
         const [result] = await conn.query(query, params);
-        // console.log(result);
         return result;
     } finally {
         await conn.release();
     }
 };
+
 
 router.get('/id/:id', authorizeRole('Staff'), async (req, res) => {
     const id = req.params.id;

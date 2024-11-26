@@ -11,7 +11,6 @@ const SQLExecutor = async (query, params = []) => {
     try {
         console.log(query);
         const [result] = await conn.query(query, params);
-        // console.log(result);
         return result;
     } finally {
         await conn.release();
@@ -46,45 +45,45 @@ router.get('/allUsers', authorizeRole('Staff'), async (req, res) => {
         const users = await SQLExecutor('SELECT ID, userName, email, userRole, avatar, createdTime FROM Users;', []);
 
         // 使用 Promise.all 并行查询每个用户对应的所有 tagID 和 tagName
-        const usersWithGroups = await Promise.all(users.map(async (user) => {
+        const usersWithTags = await Promise.all(users.map(async (user) => {
             // 查询当前用户对应的所有 tagID
-            const groupResults = await SQLExecutor('SELECT tagID FROM TagAndUser WHERE userID = ?;', [user.ID]);
+            const tagResults = await SQLExecutor('SELECT tagID FROM TagAndUser WHERE userID = ?;', [user.ID]);
 
             // 查询每个 tagID 对应的 tagName
-            const groupNames = await Promise.all(groupResults.map(async (tag) => {
-                const groupDetails = await SQLExecutor('SELECT tagName FROM TagTypes WHERE ID = ?;', [tag.tagID]);
-                return groupDetails.length > 0 ? groupDetails[0].tagName : null; // 获取 tagName
+            const tagNames = await Promise.all(tagResults.map(async (tag) => {
+                const tagDetails = await SQLExecutor('SELECT tagName FROM TagTypes WHERE ID = ?;', [tag.tagID]);
+                return tagDetails.length > 0 ? tagDetails[0].tagName : null; // 获取 tagName
             }));
 
-            // 将所有的 groupNames 添加到 user 对象中
-            user.groupNames = groupNames.filter(name => name !== null); // 过滤掉可能的 null 值
-            return user; // 返回包含所有 groupNames 的用户数据
+            // 将所有的 tagNames 添加到 user 对象中
+            user.tagNames = tagNames.filter(name => name !== null); // 过滤掉可能的 null 值
+            return user; // 返回包含所有 tagNames 的用户数据
         }));
 
         // 返回合并后的用户数据
-        res.status(200).json(usersWithGroups);
+        res.status(200).json(usersWithTags);
     } catch (error) {
-        console.error('Error fetching users and groups:', error);
+        console.error('Error fetching users and tags:', error);
         res.status(500).json({ error: 'Database query error' });
     }
 });
 
 
 
-router.get('/id/groups/:id', async (req, res) => {
+router.get('/id/tags/:id', async (req, res) => {
     const id = req.params.id;
     try {
-        const groups = await SQLExecutor('SELECT * FROM TagAndUser WHERE userID = ?;', [id]);
+        const tags = await SQLExecutor('SELECT * FROM TagAndUser WHERE userID = ?;', [id]);
 
         // get all the tag id
-        const groupIds = groups.map(tag => tag.tagID);
+        const tagIds = tags.map(tag => tag.tagID);
         // map id to generate a query
-        const placeholders = groupIds.map(() => '?').join(',');
-        const groupDetailsQuery = `SELECT tagName FROM TagTypes WHERE ID IN (${placeholders})`;
+        const placeholders = tagIds.map(() => '?').join(',');
+        const tagDetailsQuery = `SELECT tagName FROM TagTypes WHERE ID IN (${placeholders})`;
         // get the result
-        const groupDetails = await SQLExecutor(groupDetailsQuery, groupIds);
+        const tagDetails = await SQLExecutor(tagDetailsQuery, tagIds);
         // use json to pass the result, which only contains tag name
-        res.status(200).json(groupDetails);
+        res.status(200).json(tagDetails);
     } catch (error) {
         console.error('Error fetching tag:', error);
         res.status(500).json({ error: 'Database query error' });
@@ -92,14 +91,14 @@ router.get('/id/groups/:id', async (req, res) => {
 });
 
 // set a user as a member of a tag
-router.post('/setGroup', authorizeRole('Manager'), async (req, res) => {
+router.post('/setTag', authorizeRole('Manager'), async (req, res) => {
     const { tagID, userID } = req.body;  // get tagID and userID from body
 
     if (!userID) {
         res.status(400).json({ error: 'User info is required' });
     }
     if (!tagID) {
-        res.status(400).json({ error: 'Group info is required' });
+        res.status(400).json({ error: 'Tag info is required' });
     }
     try {
         // check whether user is in the tag
@@ -126,14 +125,14 @@ router.post('/setGroup', authorizeRole('Manager'), async (req, res) => {
 });
 
 // delete a user from a tag
-router.post('/deleteFromGroup', authorizeRole('Manager'), async (req, res) => {
+router.post('/deleteFromTag', authorizeRole('Manager'), async (req, res) => {
     const { tagID, userID } = req.body;  // get tagID and userID from body
 
     if (!userID) {
         res.status(400).json({ error: 'User info is required' });
     }
     if (!tagID) {
-        res.status(400).json({ error: 'Group info is required' });
+        res.status(400).json({ error: 'Tag info is required' });
     }
     try {
         // check whether user is in the tag
