@@ -95,4 +95,14 @@ router.post('/completeTask', authorizeRole('Staff'), async (req, res) => {
     }
 });
 
+router.get('/allTask', authorizeRole('Supervisor'), async (req, res) => {
+    try {
+        const task = await SQLExecutor('SELECT * FROM Tasks;', []);
+        res.status(200).json(task);
+    } catch (error) {
+        console.error('Error fetching task:', error);
+        res.status(500).json({ error: 'Database query error' });
+    }
+});
+
 module.exports = router;
