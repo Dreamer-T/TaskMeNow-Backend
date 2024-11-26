@@ -11,7 +11,7 @@ const getGroupsFromDB = async (id) => {
     const pool = getPool();
     const conn = await pool.getConnection();
     try {
-        const [result] = await conn.query("SELECT * FROM GroupAndUser WHERE userID = ?;", id);
+        const [result] = await conn.query("SELECT * FROM TagAndUser WHERE userID = ?;", id);
         console.log(result);
         return result;
     } finally {
@@ -49,7 +49,7 @@ router.post('/login', async (req, res) => {
                 createdTime: user.createdTime,
                 'token': token,
                 // 这里还需要修改，添加查询Group的操作，通过查询Groups来得到GroupID
-                groups: groupReult.groupID
+                groups: groupReult.tagID
             },
             expiresIn: 3600  // 告知客户端令牌的过期时间
         })

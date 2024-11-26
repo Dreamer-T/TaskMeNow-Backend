@@ -45,15 +45,15 @@ router.get('/allUsers', authorizeRole('Staff'), async (req, res) => {
         // 查询所有用户
         const users = await SQLExecutor('SELECT ID, userName, email, userRole, avatar, createdTime FROM Users;', []);
 
-        // 使用 Promise.all 并行查询每个用户对应的所有 groupID 和 groupName
+        // 使用 Promise.all 并行查询每个用户对应的所有 tagID 和 tagName
         const usersWithGroups = await Promise.all(users.map(async (user) => {
-            // 查询当前用户对应的所有 groupID
-            const groupResults = await SQLExecutor('SELECT groupID FROM GroupAndUser WHERE userID = ?;', [user.ID]);
+            // 查询当前用户对应的所有 tagID
+            const groupResults = await SQLExecutor('SELECT tagID FROM TagAndUser WHERE userID = ?;', [user.ID]);
 
-            // 查询每个 groupID 对应的 groupName
-            const groupNames = await Promise.all(groupResults.map(async (group) => {
-                const groupDetails = await SQLExecutor('SELECT groupName FROM GroupTypes WHERE ID = ?;', [group.groupID]);
-                return groupDetails.length > 0 ? groupDetails[0].groupName : null; // 获取 groupName
+            // 查询每个 tagID 对应的 tagName
+            const groupNames = await Promise.all(groupResults.map(async (tag) => {
+                const groupDetails = await SQLExecutor('SELECT tagName FROM TagTypes WHERE ID = ?;', [tag.tagID]);
+                return groupDetails.length > 0 ? groupDetails[0].tagName : null; // 获取 tagName
             }));
 
             // 将所有的 groupNames 添加到 user 对象中
@@ -74,79 +74,79 @@ router.get('/allUsers', authorizeRole('Staff'), async (req, res) => {
 router.get('/id/groups/:id', async (req, res) => {
     const id = req.params.id;
     try {
-        const groups = await SQLExecutor('SELECT * FROM GroupAndUser WHERE userID = ?;', [id]);
+        const groups = await SQLExecutor('SELECT * FROM TagAndUser WHERE userID = ?;', [id]);
 
-        // get all the group id
-        const groupIds = groups.map(group => group.groupID);
+        // get all the tag id
+        const groupIds = groups.map(tag => tag.tagID);
         // map id to generate a query
         const placeholders = groupIds.map(() => '?').join(',');
-        const groupDetailsQuery = `SELECT groupName FROM GroupTypes WHERE ID IN (${placeholders})`;
+        const groupDetailsQuery = `SELECT tagName FROM TagTypes WHERE ID IN (${placeholders})`;
         // get the result
         const groupDetails = await SQLExecutor(groupDetailsQuery, groupIds);
-        // use json to pass the result, which only contains group name
+        // use json to pass the result, which only contains tag name
         res.status(200).json(groupDetails);
     } catch (error) {
-        console.error('Error fetching group:', error);
+        console.error('Error fetching tag:', error);
         res.status(500).json({ error: 'Database query error' });
     }
 });
 
-// set a user as a member of a group
+// set a user as a member of a tag
 router.post('/setGroup', authorizeRole('Manager'), async (req, res) => {
-    const { groupID, userID } = req.body;  // get groupID and userID from body
+    const { tagID, userID } = req.body;  // get tagID and userID from body
 
     if (!userID) {
         res.status(400).json({ error: 'User info is required' });
     }
-    if (!groupID) {
+    if (!tagID) {
         res.status(400).json({ error: 'Group info is required' });
     }
     try {
-        // check whether user is in the group
-        let result = await SQLExecutor('SELECT * FROM GroupAndUser WHERE groupID = ? AND userID = ?', [groupID, userID]);
+        // check whether user is in the tag
+        let result = await SQLExecutor('SELECT * FROM TagAndUser WHERE tagID = ? AND userID = ?', [tagID, userID]);
         if (result.length > 0) {
-            return res.status(400).json({ error: 'User is already in the group' });
+            return res.status(400).json({ error: 'User is already in the tag' });
         }
-        result = await SQLExecutor('SELECT * FROM GroupTypes WHERE ID = ?', [groupID]);
+        result = await SQLExecutor('SELECT * FROM TagTypes WHERE ID = ?', [tagID]);
         if (result.length === 0) {
-            return res.status(400).json({ error: 'No such group' });
+            return res.status(400).json({ error: 'No such tag' });
         }
         result = await SQLExecutor('SELECT * FROM Users WHERE ID = ?', [userID]);
         if (result.length === 0) {
             return res.status(400).json({ error: 'No such user' });
         }
-        // if not, add the user into the group
-        const insertResult = await SQLExecutor('INSERT INTO GroupAndUser (groupID, userID) VALUES (?,?)', [groupID, userID]);
-        res.status(200).json({ message: 'User is added into the group successfully' });
+        // if not, add the user into the tag
+        const insertResult = await SQLExecutor('INSERT INTO TagAndUser (tagID, userID) VALUES (?,?)', [tagID, userID]);
+        res.status(200).json({ message: 'User is added into the tag successfully' });
 
     } catch (error) {
-        console.error('Error setting user\'s group: ', error);
+        console.error('Error setting user\'s tag: ', error);
         res.status(500).json({ error: 'Database query error' });
     }
 });
 
-// delete a user from a group
+// delete a user from a tag
 router.post('/deleteFromGroup', authorizeRole('Manager'), async (req, res) => {
-    const { groupID, userID } = req.body;  // get groupID and userID from body
+    const { tagID, userID } = req.body;  // get tagID and userID from body
 
     if (!userID) {
         res.status(400).json({ error: 'User info is required' });
     }
-    if (!groupID) {
+    if (!tagID) {
         res.status(400).json({ error: 'Group info is required' });
     }
     try {
-        // check whether user is in the group
-        const result = await SQLExecutor('SELECT * FROM GroupAndUser WHERE groupID = ? AND userID = ?', [groupID, userID]);
+        // check whether user is in the tag
+        const result = await SQLExecutor('SELECT * FROM TagAndUser WHERE tagID = ? AND userID = ?', [tagID, userID]);
         if (result.length === 0) {
-            res.status(400).json({ error: 'User is not in the group' });
+            res.status(400).json({ error: 'User is not in the tag' });
         } else {
-            // if not, add the user into the group
-            const deleteResult = await SQLExecutor('DELETE FROM GroupAndUser WHERE groupID = ? AND userID = ?', [groupID, userID]);
-            res.status(200).json({ message: 'User is deleted from the group successfully' });
+            // if not, add the user into the tag
+            const deleteResult = await SQLExecutor('DELETE FROM TagAndUser WHERE tagID = ? AND userID = ?', [tagID, userID]);
+            res.status(200).json({ message: 'User is deleted from the tag successfully' });
         }
     } catch (error) {
-        console.error('Error setting user\'s group: ', error);
+        console.error('Error setting user\'s tag: ', error);
         res.status(500).json({ error: 'Database query error' });
     }
 });
