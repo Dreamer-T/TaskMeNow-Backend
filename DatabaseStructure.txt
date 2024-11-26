@@ -23,13 +23,13 @@ Database Name: MainDatabase
      - avatar - VARCHAR(255) - - URL of the avatar
      - createdTime - DATETIME - NOT NULL - Auto-generated
 
-3. Table Name: GroupTypes
+3. Table Name: TagTypes
    - Fields:
      - ID - INT - NOT NULL, UNIQUE
-     - groupName - VARCHAR(45) - NOT NULL - Group name
+     - tagName - VARCHAR(45) - NOT NULL - Tag name
 
-4. Table Name: GroupAndUser
+4. Table Name: TagAndUser
    - Fields:
      - ID - INT - NOT NULL, UNIQUE
-     - groupID - INT - NOT NULL - FK, ID of the group
+     - tagID - INT - NOT NULL - FK, ID of the tag
      - userID - INT - NOT NULL - FK, ID of the user

@@ -3,7 +3,7 @@ const express = require('express');
 const { createPool, closePool } = require('./db');
 const tasksRouter = require('./task');
 const userRouter = require('./user');
-const groupRouter = require('./group')
+const tagRouter = require('./tag')
 const authRouter = require('./auth');
 const companyRouter = require('./company');
 
@@ -29,7 +29,7 @@ app.use(express.json());
     // router for tasks
     app.use('/tasks', authenticateToken, tasksRouter);
     app.use('/users', authenticateToken, userRouter);
-    app.use('/groups', authenticateToken, groupRouter);
+    app.use('/tags', authenticateToken, tagRouter);
     app.use('/images', authenticateToken, imageRouter);
 
 
