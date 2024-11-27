@@ -12,6 +12,7 @@ Database Name: MainDatabase
      - isDone - ENUM - NOT NULL - [1: Done, 0: Not done]
      - lastModifiedTime - DATETIME - - Time of last modification, default will be the create Time
      - finishedTime - DATETIME - - Time of finish
+     - tags - JSON - NOT NULL - Tags of a task, using tagID to represent tags
 
 2. Table Name: Users
    - Fields:
