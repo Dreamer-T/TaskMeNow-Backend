@@ -108,19 +108,20 @@ router.post('/setTag', authorizeRole('Manager'), async (req, res) => {
         if (result.length === 0) {
             return res.status(400).json({ error: 'No such tag' });
         }
+        // get the tag id via tagName
+        result = await SQLExecutor('SELECT * FROM TagTypes WHERE tagName = ?', [tagName]);
+        let tagID = result[0].ID;
+
         // whether the user exists
         result = await SQLExecutor('SELECT * FROM Users WHERE ID = ?', [userID]);
         if (result.length === 0) {
             return res.status(400).json({ error: 'No such user' });
         }
         // whether the user has already have that tag
-        result = await SQLExecutor('SELECT * FROM TagAndUser WHERE tagID = ? AND userID = ?', [tagName, userID]);
+        result = await SQLExecutor('SELECT * FROM TagAndUser WHERE tagID = ? AND userID = ?', [tagID, userID]);
         if (result.length > 0) {
             return res.status(400).json({ error: 'User is already in the tag' });
         }
-        // get the tag id via tagName
-        result = await SQLExecutor('SELECT * FROM TagTypes WHERE tagName = ?', [tagName]);
-        let tagID = result[0].ID;
         // add the user into the tag
         const insertResult = await SQLExecutor('INSERT INTO TagAndUser (tagID, userID) VALUES (?,?)', [tagID, userID]);
         res.status(200).json({ message: 'User is added into the tag successfully' });
