@@ -92,29 +92,36 @@ router.get('/id/tags/:id', async (req, res) => {
 
 // set a user as a member of a tag
 router.post('/setTag', authorizeRole('Manager'), async (req, res) => {
-    const { tagID, userID } = req.body;  // get tagID and userID from body
+    const { tagName, userID } = req.body;  // get tagID and userID from body
 
     if (!userID) {
         res.status(400).json({ error: 'User info is required' });
     }
-    if (!tagID) {
+    if (!tagName) {
         res.status(400).json({ error: 'Tag info is required' });
     }
     try {
-        // check whether user is in the tag
-        let result = await SQLExecutor('SELECT * FROM TagAndUser WHERE tagID = ? AND userID = ?', [tagID, userID]);
-        if (result.length > 0) {
-            return res.status(400).json({ error: 'User is already in the tag' });
-        }
-        result = await SQLExecutor('SELECT * FROM TagTypes WHERE ID = ?', [tagID]);
+        // check the restriction first
+        let result;
+        // whether the tag exists
+        result = await SQLExecutor('SELECT * FROM TagTypes WHERE tagName = ?', [tagName]);
         if (result.length === 0) {
             return res.status(400).json({ error: 'No such tag' });
         }
+        // whether the user exists
         result = await SQLExecutor('SELECT * FROM Users WHERE ID = ?', [userID]);
         if (result.length === 0) {
             return res.status(400).json({ error: 'No such user' });
         }
-        // if not, add the user into the tag
+        // whether the user has already have that tag
+        result = await SQLExecutor('SELECT * FROM TagAndUser WHERE tagID = ? AND userID = ?', [tagName, userID]);
+        if (result.length > 0) {
+            return res.status(400).json({ error: 'User is already in the tag' });
+        }
+        // get the tag id via tagName
+        result = await SQLExecutor('SELECT * FROM TagTypes WHERE tagName = ?', [tagName]);
+        let tagID = result[0].ID;
+        // add the user into the tag
         const insertResult = await SQLExecutor('INSERT INTO TagAndUser (tagID, userID) VALUES (?,?)', [tagID, userID]);
         res.status(200).json({ message: 'User is added into the tag successfully' });
 
