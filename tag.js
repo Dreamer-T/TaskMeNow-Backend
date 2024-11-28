@@ -18,10 +18,10 @@ const SQLExecutor = async (query, params = []) => {
 
 
 // API for getting all the tags
-router.get('/getTags', async (req, res) => {
+router.get('/getTags', authorizeRole('Staff'), async (req, res) => {
     try {
         // check whether tag name has already existed
-        const result = await SQLExecutor('SELECT tagName FROM TagTypes');
+        const result = await SQLExecutor('SELECT * FROM TagTypes');
         res.status(200).json(result);
     } catch (error) {
         console.error('Error creating tag:', error);
