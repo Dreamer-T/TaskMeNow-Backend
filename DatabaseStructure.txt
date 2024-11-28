@@ -8,7 +8,7 @@ Database Name: MainDatabase
      - assignedTo - INT - NOT NULL - FK, ID of the user assigned to complete this task
      - createdBy - INT - NOT NULL - FK, ID of the user who created this task
      - createdTime - DATETIME - NOT NULL - Auto-generated
-     - urgencyLevel - INT - NOT NULL - Level of urgency (1, 2, 3, 4; higher values indicate greater urgency)
+     - urgencyLevel - INT - NOT NULL - Level of urgency (1, 2, 3; higher values indicate lower urgency)
      - isDone - ENUM - NOT NULL - [1: Done, 0: Not done]
      - lastModifiedTime - DATETIME - - Time of last modification, default will be the create Time
      - finishedTime - DATETIME - - Time of finish
