@@ -178,8 +178,16 @@ router.post('/completeTask', authorizeRole('Staff'), async (req, res) => {
 // API for supervisor and manager to get all tasks
 router.get('/allTasks', authorizeRole('Supervisor'), async (req, res) => {
     try {
-        const task = await SQLExecutor('SELECT * FROM Tasks;', []);
-        res.status(200).json(task);
+        const tasks = await SQLExecutor('SELECT * FROM Tasks;', []);
+        const tasksWithCreator = await Promise.all(tasks.map(async (task) => {
+            // get userName via Users according to createdBy
+            const creatorResult = await SQLExecutor('SELECT userName FROM Users WHERE ID = ?', [task.createdBy]);
+            // include creatorName in json
+            task.creatorName = creatorResult.length > 0 ? creatorResult[0].userName : null;
+            return task;
+        }));
+
+        res.status(200).json(tasksWithCreator);
     } catch (error) {
         console.error('Error fetching task:', error);
         res.status(500).json({ error: 'Database query error' });
