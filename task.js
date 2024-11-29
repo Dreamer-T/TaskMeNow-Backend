@@ -51,8 +51,7 @@ router.get('/assignedTo/:assignedTo', authorizeRole('Staff'), async (req, res) =
 });
 
 
-
-// API of create a task, at least to be a staff
+// API of create a task, at least to be a staff, tags have to contain "New" tag
 router.post('/createTask', authorizeRole('Staff'), async (req, res) => {
     const { taskDescription, taskImage, assignedTo, createdBy, urgencyLevel, tags } = req.body;
 
@@ -62,7 +61,9 @@ router.post('/createTask', authorizeRole('Staff'), async (req, res) => {
     }
 
     try {
-        var jsonTagIDs = JSON.stringify(tags);
+        const newID = await SQLExecutor('SELECT ID FROM TagTypes WHERE tagName = ?', ['New']);
+        tags.push(newID[0].ID);
+        var jsonTagIDs = JSON.stringify({ "ID": tags });
         const query = 'INSERT INTO Tasks (taskDescription, taskImage, assignedTo, createdBy, urgencyLevel, tags) VALUES (?, ?, ?, ?, ?, ?)';
         const values = [taskDescription, taskImage || null, assignedTo, createdBy, urgencyLevel, jsonTagIDs];
         const result = await SQLExecutor(query, values);
@@ -71,6 +72,41 @@ router.post('/createTask', authorizeRole('Staff'), async (req, res) => {
     } catch (error) {
         console.error('Error creating task:', error);
         res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// API of view a task, once it viewed, the task is no longer a new task, that is to say, remove "new" tag in tags field
+router.post('/viewTask', authorizeRole('Staff'), async (req, res) => {
+    const { taskID } = req.body;
+
+    if (!taskID) {
+        return res.status(400).json({ error: 'Task ID is required' });
+    }
+
+    try {
+        const taskResult = await SQLExecutor('SELECT tags FROM Tasks WHERE ID = ?', [taskID]);
+
+        if (taskResult.length === 0) {
+            return res.status(404).json({ error: 'Task not found' });
+        }
+        // get all tags
+        let tagIDs = taskResult[0].tags.ID;
+        console.log(tagIDs);
+        if (!Array.isArray(tagIDs)) {
+            return res.status(500).json({ error: 'Invalid tags format in database' });
+        }
+
+        const newID = await SQLExecutor('SELECT ID FROM TagTypes WHERE tagName = ?', ['New']);
+        // remove "new" tag
+        tagIDs = tagIDs.filter(tag => tag !== newID[0].ID);
+
+        // update tags in database
+        await SQLExecutor('UPDATE Tasks SET tags = ? WHERE ID = ?', [JSON.stringify({ "ID": tagIDs }), taskID]);
+
+        res.status(200).json({ message: 'Task viewed successfully', taskID, updatedTags: tagIDs });
+    } catch (error) {
+        console.error('Error updating task tags:', error);
+        res.status(500).json({ error: 'Database update error' });
     }
 });
 
