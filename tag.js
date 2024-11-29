@@ -29,7 +29,7 @@ router.get('/getTags', authorizeRole('Staff'), async (req, res) => {
     }
 });
 
-// API for creating a tag
+// API for creating a tag, only manager can create a tag
 router.post('/createTag', authorizeRole('Manager'), async (req, res) => {
     const { tagName } = req.body;  // 从请求体中获取 tagName
 

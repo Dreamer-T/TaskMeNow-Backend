@@ -176,7 +176,7 @@ router.post('/completeTask', authorizeRole('Staff'), async (req, res) => {
 });
 
 // API for supervisor and manager to get all tasks
-router.get('/allTask', authorizeRole('Supervisor'), async (req, res) => {
+router.get('/allTasks', authorizeRole('Supervisor'), async (req, res) => {
     try {
         const task = await SQLExecutor('SELECT * FROM Tasks;', []);
         res.status(200).json(task);
