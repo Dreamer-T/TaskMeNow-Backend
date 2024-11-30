@@ -57,7 +57,17 @@ router.get('/allUsers', authorizeRole('Staff'), async (req, res) => {
 
             // 将所有的 tagNames 添加到 user 对象中
             user.tagNames = tagNames.filter(name => name !== null); // 过滤掉可能的 null 值
-            user.tagIDs = tagResults
+            // 查询每个 tagID 对应的 tagName
+            const tags = []; // 用于存储包含 tagID 和 tagName 的数组
+            await Promise.all(tagResults.map(async (tag) => {
+                const tagDetails = await SQLExecutor('SELECT tagName FROM TagTypes WHERE ID = ?;', [tag.tagID]);
+                if (tagDetails.length > 0) {
+                    tags.push({ tagID: tag.tagID, tagName: tagDetails[0].tagName }); // 存储 tagID 和 tagName
+                }
+            }));
+
+            // 将 tags 数组添加到 user 对象中
+            user.tags = tags; // 新增的字段，包含 tagID 和 tagName 的映射数组
             return user; // 返回包含所有 tagNames 的用户数据
         }));
 
