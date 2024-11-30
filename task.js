@@ -121,7 +121,7 @@ router.post('/updateTask', authorizeRole('Staff'), async (req, res) => {
     }
 
     try {
-        var jsonTagIDs = JSON.stringify(tags);
+        var jsonTagIDs = JSON.stringify({ 'ID': tags });
         const query = 'UPDATE Tasks SET taskDescription = ?, taskImage = ?, urgencyLevel = ?, tags = ? WHERE ID = ?';
         const values = [taskDescription, taskImage || null, urgencyLevel, jsonTagIDs, taskID];
         const result = await SQLExecutor(query, values);

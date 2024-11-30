@@ -72,7 +72,7 @@ router.post('/changeTag', async (req, res) => {
 });
 
 // API for deleting a tag
-router.post('/deleteTag', async (req, res) => {
+router.post('/deleteTag', authorizeRole('Manager'), async (req, res) => {
     const { tagName } = req.body;  // 从请求体中获取 tagName
 
     if (!tagName) {
@@ -84,20 +84,46 @@ router.post('/deleteTag', async (req, res) => {
         const result = await SQLExecutor('SELECT ID FROM TagTypes WHERE tagName = ?', [tagName]);
         if (result.length === 0) {
             // 如果找不到该组，返回错误
-            res.status(400).json({ error: 'No such tag' });
+            return res.status(400).json({ error: 'No such tag' });
         }
         const tagID = result[0].ID;
+
+        // delete tag and task relationship from table
+        const tasks = await SQLExecutor(`SELECT ID, tags FROM Tasks WHERE JSON_CONTAINS(tags->'$.ID', JSON_ARRAY(?))`, [tagID]);
+
+        // 如果没有任务包含该 tagID，直接返回
+        if (tasks.length === 0) {
+            res.status(200).json({
+                message: `Tag "${tagName}" has been deleted from table, relationships have been removed`,
+                updatedTaskCount: 0
+            });
+        }
+
+        // 更新每个任务的 tags 字段，移除指定的 tagID
+        for (let task of tasks) {
+            let tags = task.tags;
+            console.log(tags.ID);
+            let updatedTagIDs = tags.ID.filter((id) => id !== parseInt(tagID, 10));
+            console.log(updatedTagIDs);
+            var jsonTagIDs = JSON.stringify({ "ID": updatedTagIDs });
+            await SQLExecutor('UPDATE Tasks SET tags = ? WHERE ID = ?', [jsonTagIDs, task.ID]);
+        }
         // delete tag info from table
         let deleteResult = await SQLExecutor(`DELETE FROM TagTypes WHERE ID = ${tagID}`, []);
 
         if (deleteResult.affectedRows === 0) {
-            res.status(500).json({ error: 'Failed to delete tag' });
+            return res.status(500).json({ error: 'Failed to delete tag' });
         }
 
-        // delete relationship from table
+        // delete tag and user relationship from table
         deleteResult = await SQLExecutor(`DELETE FROM TagAndUser WHERE tagID = ${tagID}`, []);
-        // 返回成功信息
-        res.status(200).json({ message: `Tag "${tagName}" has been deleted from table, relationships have been removed` });
+
+
+        // // 返回成功信息
+        res.status(200).json({
+            message: `Tag "${tagName}" has been deleted from table, relationships have been removed`,
+            updatedTaskCount: tasks.length
+        });
 
     } catch (error) {
         console.error('Error deleting tag:', error);
