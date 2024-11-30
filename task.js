@@ -133,6 +133,24 @@ router.post('/updateTask', authorizeRole('Staff'), async (req, res) => {
     }
 });
 
+// // API of change the tag of a task, at least to be a staff
+// router.post('/deleteTagFromTask', authorizeRole('Staff'), async (req, res) => {
+//     const { taskID, tagID } = req.body;
+
+//     // check those are necessary
+//     if (!taskID || !tagID) {
+//         return res.status(400).json({ error: 'Missing required fields' });
+//     }
+
+//     try {
+//         // TODO:这里需要添加一个只删除tagID的方法
+//         res.status(200).json({ message: `Task#${taskID} has deleted tag#${tagID} successfully` });
+//     } catch (error) {
+//         console.error('Error updating task:', error);
+//         res.status(500).json({ error: 'Database error' });
+//     }
+// });
+
 // API of reassign a task, at least to be a staff
 router.post('/reassignTask', authorizeRole('Supervisor'), async (req, res) => {
     const { taskID, assignedTo } = req.body;

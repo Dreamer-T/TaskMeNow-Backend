@@ -57,6 +57,7 @@ router.get('/allUsers', authorizeRole('Staff'), async (req, res) => {
 
             // 将所有的 tagNames 添加到 user 对象中
             user.tagNames = tagNames.filter(name => name !== null); // 过滤掉可能的 null 值
+            user.tagIDs = tagResults
             return user; // 返回包含所有 tagNames 的用户数据
         }));
 
