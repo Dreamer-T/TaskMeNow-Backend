@@ -112,23 +112,66 @@ router.post('/viewTask', authorizeRole('Staff'), async (req, res) => {
 
 
 // API of update a task, at least to be a staff
-router.post('/updateTask', authorizeRole('Staff'), async (req, res) => {
-    const { taskID, taskDescription, taskImage, urgencyLevel, tags } = req.body;
+router.put('/updateTask', authorizeRole('Staff'), async (req, res) => {
+    const { taskID, updates, modifiedBy } = req.body;
 
-    // check those are necessary
-    if (!taskID || !taskDescription || !urgencyLevel || !tags) {
+    if (!taskID || !updates || !modifiedBy) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
 
     try {
-        var jsonTagIDs = JSON.stringify({ 'ID': tags });
-        const query = 'UPDATE Tasks SET taskDescription = ?, taskImage = ?, urgencyLevel = ?, tags = ? WHERE ID = ?';
-        const values = [taskDescription, taskImage || null, urgencyLevel, jsonTagIDs, taskID];
-        const result = await SQLExecutor(query, values);
+        // current task info
+        const [currentTask] = await SQLExecutor('SELECT * FROM Tasks WHERE ID = ?', [taskID]);
+        if (!currentTask) {
+            return res.status(404).json({ error: 'Task not found' });
+        }
 
-        res.status(200).json({ message: 'Task updated successfully', affectedRowNumber: result.affectedRows });
+        const fieldsToUpdate = [];
+        const historyEntries = [];
+
+        // compare what has changed
+        for (let field in updates) {
+            if (currentTask[field] !== updates[field]) {
+                fieldsToUpdate.push(`${field} = ?`);
+                historyEntries.push([
+                    taskID, field, currentTask[field], updates[field], modifiedBy, new Date().toISOString()
+                ]);
+            }
+        }
+
+        if (fieldsToUpdate.length === 0) {
+            return res.status(200).json({ message: 'No changes detected' });
+        }
+
+        // update
+        const updateQuery = `UPDATE Tasks SET ${fieldsToUpdate.join(', ')}, lastModifiedTime = ? WHERE ID = ?`;
+        await SQLExecutor(updateQuery, [...Object.values(updates), new Date().toISOString(), taskID]);
+
+        // record as history
+        const historyQuery = `INSERT INTO TaskHistory (taskID, fieldModified, previousValue, newValue, modifiedBy, modifiedTime) 
+                              VALUES (?, ?, ?, ?, ?, ?)`;
+        await Promise.all(historyEntries.map(entry => SQLExecutor(historyQuery, entry)));
+
+        res.status(200).json({ message: 'Task updated successfully', updatedTaskID: taskID });
     } catch (error) {
         console.error('Error updating task:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// API of getting the changing histroy of a task
+router.get('/taskHistory/:taskID', authorizeRole('Supervisor'), async (req, res) => {
+    const { taskID } = req.params;
+
+    try {
+        const history = await SQLExecutor(
+            `SELECT fieldModified, previousValue, newValue, modifiedBy, modifiedTime 
+             FROM TaskHistory WHERE taskID = ? ORDER BY modifiedTime ASC`,
+            [taskID]
+        );
+        res.status(200).json(history);
+    } catch (error) {
+        console.error('Error fetching task history:', error);
         res.status(500).json({ error: 'Database error' });
     }
 });

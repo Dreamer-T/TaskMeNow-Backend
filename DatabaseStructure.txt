@@ -34,3 +34,13 @@ Database Name: MainDatabase
      - ID - INT - NOT NULL, UNIQUE
      - tagID - INT - NOT NULL - FK, ID of the tag
      - userID - INT - NOT NULL - FK, ID of the user
+
+5. Table Name: TaskHistory
+    - Fields:
+     - ID - INT - NOT NULL, UNIQUE 
+     - taskID - INT - NOT NULL - FK 
+     - fieldModified - VARCHAR(256) - NOT NULL - 
+     - previousValue - TEXT - - what it used to be
+     - newValue - TEXT - - new value of given field
+     - modifiedBy - INT - NOT NULL - FK ID of who change it
+     - modifiedTime - DATETIME - NOT NULL - time of changing
