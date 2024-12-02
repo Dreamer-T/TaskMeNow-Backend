@@ -133,7 +133,7 @@ router.post('/updateTask', authorizeRole('Staff'), async (req, res) => {
     }
 });
 
-// // API of change the tag of a task, at least to be a staff
+// // API of delete the tag of a task, at least to be a staff
 // router.post('/deleteTagFromTask', authorizeRole('Staff'), async (req, res) => {
 //     const { taskID, tagID } = req.body;
 

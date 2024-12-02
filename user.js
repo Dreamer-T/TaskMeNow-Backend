@@ -144,14 +144,14 @@ router.post('/setTag', authorizeRole('Manager'), async (req, res) => {
 });
 
 // delete a user from a tag
-router.post('/deleteFromTag', authorizeRole('Manager'), async (req, res) => {
+router.post('/deleteFromTagWithTagID', authorizeRole('Manager'), async (req, res) => {
     const { tagID, userID } = req.body;  // get tagID and userID from body
 
     if (!userID) {
-        res.status(400).json({ error: 'User info is required' });
+        return res.status(400).json({ error: 'User info is required' });
     }
     if (!tagID) {
-        res.status(400).json({ error: 'Tag info is required' });
+        return res.status(400).json({ error: 'Tag info is required' });
     }
     try {
         // check whether user is in the tag
@@ -169,4 +169,34 @@ router.post('/deleteFromTag', authorizeRole('Manager'), async (req, res) => {
     }
 });
 
+// delete a user from a tag
+router.post('/deleteFromTagWithTagName', authorizeRole('Manager'), async (req, res) => {
+    const { tagName, userID } = req.body;  // get tagID and userID from body
+
+    if (!userID) {
+        return res.status(400).json({ error: 'User info is required' });
+    }
+    if (!tagName) {
+        return res.status(400).json({ error: 'Tag info is required' });
+    }
+    try {
+        // check whether user is in the tag
+        let result = await SQLExecutor('SELECT ID FROM TagTypes WHERE tagName = ? ', [tagName]);
+        if (result.length === 0) {
+            return res.status(400).json({ error: 'No such tag' });
+        }
+        var tagID = result[0].ID;
+        result = await SQLExecutor('SELECT * FROM TagAndUser WHERE tagID = ? AND userID = ?', [tagID, userID]);
+        if (result.length === 0) {
+            res.status(400).json({ error: 'User is not in the tag' });
+        } else {
+            // if not, add the user into the tag
+            const deleteResult = await SQLExecutor('DELETE FROM TagAndUser WHERE tagID = ? AND userID = ?', [tagID, userID]);
+            res.status(200).json({ message: 'User is deleted from the tag successfully' });
+        }
+    } catch (error) {
+        console.error('Error setting user\'s tag: ', error);
+        res.status(500).json({ error: 'Database query error' });
+    }
+});
 module.exports = router;
