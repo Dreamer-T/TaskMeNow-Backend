@@ -110,54 +110,60 @@ router.post('/viewTask', authorizeRole('Staff'), async (req, res) => {
     }
 });
 
+// Something wrong, need to rethink
+// // API of update a task, at least to be a staff
+// router.put('/updateTask', authorizeRole('Staff'), async (req, res) => {
+//     const { taskID, updates, modifiedBy } = req.body;
 
-// API of update a task, at least to be a staff
-router.put('/updateTask', authorizeRole('Staff'), async (req, res) => {
-    const { taskID, updates, modifiedBy } = req.body;
+//     if (!taskID) {
+//         return res.status(400).json({ error: 'Missing taskID fields' });
+//     }
 
-    if (!taskID || !updates || !modifiedBy) {
-        return res.status(400).json({ error: 'Missing required fields' });
-    }
+//     if (!updates) {
+//         return res.status(400).json({ error: 'Missing updates fields' });
+//     }
+//     if (!modifiedBy) {
+//         return res.status(400).json({ error: 'Missing modifiedBy fields' });
+//     }
+//     try {
+//         // current task info
+//         const [currentTask] = await SQLExecutor('SELECT * FROM Tasks WHERE ID = ?', [taskID]);
+//         if (!currentTask) {
+//             return res.status(404).json({ error: 'Task not found' });
+//         }
 
-    try {
-        // current task info
-        const [currentTask] = await SQLExecutor('SELECT * FROM Tasks WHERE ID = ?', [taskID]);
-        if (!currentTask) {
-            return res.status(404).json({ error: 'Task not found' });
-        }
+//         const fieldsToUpdate = [];
+//         const historyEntries = [];
 
-        const fieldsToUpdate = [];
-        const historyEntries = [];
+//         // compare what has changed
+//         for (let field in updates) {
+//             if (currentTask[field] !== updates[field]) {
+//                 fieldsToUpdate.push(`${field} = ?`);
+//                 historyEntries.push([
+//                     taskID, field, currentTask[field], updates[field], modifiedBy, new Date().toISOString()
+//                 ]);
+//             }
+//         }
 
-        // compare what has changed
-        for (let field in updates) {
-            if (currentTask[field] !== updates[field]) {
-                fieldsToUpdate.push(`${field} = ?`);
-                historyEntries.push([
-                    taskID, field, currentTask[field], updates[field], modifiedBy, new Date().toISOString()
-                ]);
-            }
-        }
+//         if (fieldsToUpdate.length === 0) {
+//             return res.status(200).json({ message: 'No changes detected' });
+//         }
 
-        if (fieldsToUpdate.length === 0) {
-            return res.status(200).json({ message: 'No changes detected' });
-        }
+//         // update
+//         const updateQuery = `UPDATE Tasks SET ${fieldsToUpdate.join(', ')}, lastModifiedTime = ? WHERE ID = ?`;
+//         await SQLExecutor(updateQuery, [...Object.values(updates), new Date().toISOString(), taskID]);
 
-        // update
-        const updateQuery = `UPDATE Tasks SET ${fieldsToUpdate.join(', ')}, lastModifiedTime = ? WHERE ID = ?`;
-        await SQLExecutor(updateQuery, [...Object.values(updates), new Date().toISOString(), taskID]);
+//         // record as history
+//         const historyQuery = `INSERT INTO TaskHistory (taskID, fieldModified, previousValue, newValue, modifiedBy) 
+//                               VALUES (?, ?, ?, ?, ?)`;
+//         await Promise.all(historyEntries.map(entry => SQLExecutor(historyQuery, entry)));
 
-        // record as history
-        const historyQuery = `INSERT INTO TaskHistory (taskID, fieldModified, previousValue, newValue, modifiedBy) 
-                              VALUES (?, ?, ?, ?, ?)`;
-        await Promise.all(historyEntries.map(entry => SQLExecutor(historyQuery, entry)));
-
-        res.status(200).json({ message: 'Task updated successfully', updatedTaskID: taskID });
-    } catch (error) {
-        console.error('Error updating task:', error);
-        res.status(500).json({ error: 'Database error' });
-    }
-});
+//         res.status(200).json({ message: 'Task updated successfully', updatedTaskID: taskID });
+//     } catch (error) {
+//         console.error('Error updating task:', error);
+//         res.status(500).json({ error: 'Database error' });
+//     }
+// });
 
 // API of getting the changing histroy of a task
 router.get('/taskHistory/:taskID', authorizeRole('Supervisor'), async (req, res) => {
