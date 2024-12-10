@@ -148,8 +148,8 @@ router.put('/updateTask', authorizeRole('Staff'), async (req, res) => {
         await SQLExecutor(updateQuery, [...Object.values(updates), new Date().toISOString(), taskID]);
 
         // record as history
-        const historyQuery = `INSERT INTO TaskHistory (taskID, fieldModified, previousValue, newValue, modifiedBy, modifiedTime) 
-                              VALUES (?, ?, ?, ?, ?, ?)`;
+        const historyQuery = `INSERT INTO TaskHistory (taskID, fieldModified, previousValue, newValue, modifiedBy) 
+                              VALUES (?, ?, ?, ?, ?)`;
         await Promise.all(historyEntries.map(entry => SQLExecutor(historyQuery, entry)));
 
         res.status(200).json({ message: 'Task updated successfully', updatedTaskID: taskID });
