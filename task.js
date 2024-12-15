@@ -8,7 +8,7 @@ const SQLExecutor = async (query, params = []) => {
     const pool = getPool();
     const conn = await pool.getConnection();
     try {
-        console.log(query);
+        // console.log(query);
         const [result] = await conn.query(query, params);
         return result;
     } finally {
@@ -111,59 +111,80 @@ router.post('/viewTask', authorizeRole('Staff'), async (req, res) => {
 });
 
 // Something wrong, need to rethink
-// // API of update a task, at least to be a staff
-// router.put('/updateTask', authorizeRole('Staff'), async (req, res) => {
-//     const { taskID, updates, modifiedBy } = req.body;
+// API of update a task, at least to be a staff
+router.put('/updateTask', authorizeRole('Staff'), async (req, res) => {
+    const { taskID, updates, modifiedBy } = req.body; // updates 是一个数组
 
-//     if (!taskID) {
-//         return res.status(400).json({ error: 'Missing taskID fields' });
-//     }
+    if (!updates || updates.length === 0) {
+        return res.status(400).json({ error: 'No updates provided' });
+    }
 
-//     if (!updates) {
-//         return res.status(400).json({ error: 'Missing updates fields' });
-//     }
-//     if (!modifiedBy) {
-//         return res.status(400).json({ error: 'Missing modifiedBy fields' });
-//     }
-//     try {
-//         // current task info
-//         const [currentTask] = await SQLExecutor('SELECT * FROM Tasks WHERE ID = ?', [taskID]);
-//         if (!currentTask) {
-//             return res.status(404).json({ error: 'Task not found' });
-//         }
+    const modifiedTime = new Date();
 
-//         const fieldsToUpdate = [];
-//         const historyEntries = [];
+    try {
+        // 获取当前任务状态
+        const [task] = await SQLExecutor('SELECT * FROM Tasks WHERE ID = ?', [taskID]);
+        if (!task) {
+            return res.status(404).json({ error: 'Task not found' });
+        }
 
-//         // compare what has changed
-//         for (let field in updates) {
-//             if (currentTask[field] !== updates[field]) {
-//                 fieldsToUpdate.push(`${field} = ?`);
-//                 historyEntries.push([
-//                     taskID, field, currentTask[field], updates[field], modifiedBy, new Date().toISOString()
-//                 ]);
-//             }
-//         }
+        // 遍历 updates 并检查差异
+        const historyEntries = [];
+        const updateFields = [];
+        const updateValues = [];
+        for (const update of updates) {
+            const [field, newValue] = Object.entries(update)[0]; // 获取 key-value 对
+            const oldValue = task[field];
+            if (oldValue != newValue) {
+                // 如果字段有变化，记录到历史表
+                // console.log("field:" + field);
+                if (field === "tags") {
+                    var newTags = JSON.stringify({ "ID": newValue });
+                    historyEntries.push([
+                        taskID, field, JSON.stringify(oldValue), newTags, modifiedBy, modifiedTime
+                    ]);
+                    // 更新任务表
+                    updateFields.push(`${field} = ?`);
+                    updateValues.push(newTags);
+                }
+                else {
+                    historyEntries.push([
+                        taskID, field, oldValue, newValue, modifiedBy, modifiedTime
+                    ]);
+                    // 更新任务表
+                    updateFields.push(`${field} = ?`);
+                    updateValues.push(newValue);
+                }
+            }
+        }
 
-//         if (fieldsToUpdate.length === 0) {
-//             return res.status(200).json({ message: 'No changes detected' });
-//         }
+        if (historyEntries.length === 0) {
+            return res.status(200).json({ message: 'No changes detected' });
+        }
 
-//         // update
-//         const updateQuery = `UPDATE Tasks SET ${fieldsToUpdate.join(', ')}, lastModifiedTime = ? WHERE ID = ?`;
-//         await SQLExecutor(updateQuery, [...Object.values(updates), new Date().toISOString(), taskID]);
+        // 更新任务表
+        const updateQuery = `
+            UPDATE Tasks SET 
+                ${updateFields.join(', ')},
+                lastModifiedTime = ?
+            WHERE ID = ?`;
+        await SQLExecutor(updateQuery, [...updateValues, modifiedTime, taskID]);
 
-//         // record as history
-//         const historyQuery = `INSERT INTO TaskHistory (taskID, fieldModified, previousValue, newValue, modifiedBy) 
-//                               VALUES (?, ?, ?, ?, ?)`;
-//         await Promise.all(historyEntries.map(entry => SQLExecutor(historyQuery, entry)));
+        // 插入修改记录到 TaskHistory
+        const historyQuery = `
+            INSERT INTO TaskHistory (taskID, fieldModified, previousValue, newValue, modifiedBy, modifiedTime)
+            VALUES (?, ?, ?, ?, ?, ?)`;
+        for (const entry of historyEntries) {
+            await SQLExecutor(historyQuery, entry);
+        }
 
-//         res.status(200).json({ message: 'Task updated successfully', updatedTaskID: taskID });
-//     } catch (error) {
-//         console.error('Error updating task:', error);
-//         res.status(500).json({ error: 'Database error' });
-//     }
-// });
+        res.status(200).json({ message: 'Task updated successfully', history: historyEntries });
+    } catch (error) {
+        console.error('Error updating task:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
 
 // API of getting the changing histroy of a task
 router.get('/taskHistory/:taskID', authorizeRole('Supervisor'), async (req, res) => {
