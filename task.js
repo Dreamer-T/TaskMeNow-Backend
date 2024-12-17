@@ -113,7 +113,7 @@ router.post('/viewTask', authorizeRole('Staff'), async (req, res) => {
 // Something wrong, need to rethink
 // API of update a task, at least to be a staff
 router.put('/updateTask', authorizeRole('Staff'), async (req, res) => {
-    const { taskID, updates, modifiedBy } = req.body; // updates 是一个数组
+    const { taskID, updates, modifiedByID, modifiedByName } = req.body; // updates 是一个数组
 
     if (!updates || updates.length === 0) {
         return res.status(400).json({ error: 'No updates provided' });
@@ -141,7 +141,7 @@ router.put('/updateTask', authorizeRole('Staff'), async (req, res) => {
                 if (field === "tags") {
                     var newTags = JSON.stringify({ "ID": newValue });
                     historyEntries.push([
-                        taskID, field, JSON.stringify(oldValue), newTags, modifiedBy, modifiedTime
+                        taskID, field, JSON.stringify(oldValue), newTags, modifiedByID, modifiedByName, modifiedTime
                     ]);
                     // 更新任务表
                     updateFields.push(`${field} = ?`);
@@ -149,7 +149,7 @@ router.put('/updateTask', authorizeRole('Staff'), async (req, res) => {
                 }
                 else {
                     historyEntries.push([
-                        taskID, field, oldValue, newValue, modifiedBy, modifiedTime
+                        taskID, field, oldValue, newValue, modifiedByID, modifiedByName, modifiedTime
                     ]);
                     // 更新任务表
                     updateFields.push(`${field} = ?`);
@@ -172,8 +172,8 @@ router.put('/updateTask', authorizeRole('Staff'), async (req, res) => {
 
         // 插入修改记录到 TaskHistory
         const historyQuery = `
-            INSERT INTO TaskHistory (taskID, fieldModified, previousValue, newValue, modifiedBy, modifiedTime)
-            VALUES (?, ?, ?, ?, ?, ?)`;
+            INSERT INTO TaskHistory (taskID, fieldModified, previousValue, newValue, modifiedByID, modifiedByName, modifiedTime)
+            VALUES (?, ?, ?, ?, ?, ?, ?)`;
         for (const entry of historyEntries) {
             await SQLExecutor(historyQuery, entry);
         }
@@ -192,7 +192,7 @@ router.get('/taskHistory/:taskID', authorizeRole('Supervisor'), async (req, res)
 
     try {
         const history = await SQLExecutor(
-            `SELECT fieldModified, previousValue, newValue, modifiedBy, modifiedTime 
+            `SELECT fieldModified, previousValue, newValue, modifiedByID, modifiedByName, modifiedTime
              FROM TaskHistory WHERE taskID = ? ORDER BY modifiedTime ASC`,
             [taskID]
         );
