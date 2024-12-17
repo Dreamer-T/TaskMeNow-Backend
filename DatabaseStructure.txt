@@ -42,5 +42,6 @@ Database Name: MainDatabase
      - fieldModified - VARCHAR(256) - NOT NULL - 
      - previousValue - TEXT - - what it used to be
      - newValue - TEXT - - new value of given field
-     - modifiedBy - INT - NOT NULL - FK ID of who change it
+     - modifiedByID - INT - NOT NULL - FK ID of who change it
+     - modifiedByName - String - NOT NULL - Name of who change it
      - modifiedTime - DATETIME - NOT NULL - time of changing
