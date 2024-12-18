@@ -100,8 +100,12 @@ router.post('/viewTask', authorizeRole('Staff'), async (req, res) => {
         // remove "new" tag
         tagIDs = tagIDs.filter(tag => tag !== newID[0].ID);
 
+        const modifiedTime = new Date();
         // update tags in database
         await SQLExecutor('UPDATE Tasks SET tags = ? WHERE ID = ?', [JSON.stringify({ "ID": tagIDs }), taskID]);
+        await SQLExecutor(`
+            INSERT INTO TaskHistory (taskID, fieldModified, previousValue, newValue, modifiedByID, modifiedByName, modifiedTime)
+            VALUES(?, ?, ?, ?, ?, ?, ?) `, [taskID, 'Viewed', '', 'Viewed', '', '', modifiedTime])
 
         res.status(200).json({ message: 'Task viewed successfully', taskID, updatedTags: tagIDs });
     } catch (error) {
