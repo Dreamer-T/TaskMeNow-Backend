@@ -77,7 +77,7 @@ router.post('/createTask', authorizeRole('Staff'), async (req, res) => {
 
 // API of view a task, once it viewed, the task is no longer a new task, that is to say, remove "new" tag in tags field
 router.post('/viewTask', authorizeRole('Staff'), async (req, res) => {
-    const { taskID } = req.body;
+    const { taskID, viewedByID, viewedByName } = req.body;
 
     if (!taskID) {
         return res.status(400).json({ error: 'Task ID is required' });
@@ -105,7 +105,7 @@ router.post('/viewTask', authorizeRole('Staff'), async (req, res) => {
         await SQLExecutor('UPDATE Tasks SET tags = ? WHERE ID = ?', [JSON.stringify({ "ID": tagIDs }), taskID]);
         await SQLExecutor(`
             INSERT INTO TaskHistory (taskID, fieldModified, previousValue, newValue, modifiedByID, modifiedByName, modifiedTime)
-            VALUES(?, ?, ?, ?, ?, ?, ?) `, [taskID, 'Viewed', '', 'Viewed', '', '', modifiedTime])
+            VALUES(?, ?, ?, ?, ?, ?, ?) `, [taskID, 'Viewed', '', 'Viewed', viewedByID, viewedByName, modifiedTime])
 
         res.status(200).json({ message: 'Task viewed successfully', taskID, updatedTags: tagIDs });
     } catch (error) {
