@@ -84,10 +84,15 @@ router.post('/viewTask', authorizeRole('Staff'), async (req, res) => {
     try {
         const modifiedTime = new Date();
         await SQLExecutor(`UPDATE Tasks SET isViewed = \'1\' WHERE ID = ?`, [taskID])
-        await SQLExecutor(`
+        const taskRecord = await SQLExecutor(`SELECT isViewed FROM Tasks WHERE ID = ?`, [taskID])
+        if (taskRecord[0].isViewed === '1') {
+            return res.status(200).json({ message: 'Task has been already viewed' });
+        }
+        else {
+            await SQLExecutor(`
             INSERT INTO TaskHistory (taskID, fieldModified, previousValue, newValue, modifiedByID, modifiedByName, modifiedTime)
             VALUES(?, ?, ?, ?, ?, ?, ?) `, [taskID, 'isViewed', '0', '1', viewedByID, viewedByName, modifiedTime])
-
+        }
         res.status(200).json({ message: 'Task viewed successfully' });
     } catch (error) {
         console.error('Error view task:', error);
