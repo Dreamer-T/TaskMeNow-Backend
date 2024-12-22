@@ -61,8 +61,6 @@ router.post('/createTask', authorizeRole('Staff'), async (req, res) => {
     }
 
     try {
-        const newID = await SQLExecutor('SELECT ID FROM TagTypes WHERE tagName = ?', ['New']);
-        tags.push(newID[0].ID);
         var jsonTagIDs = JSON.stringify({ "ID": tags });
         const query = 'INSERT INTO Tasks (taskDescription, taskImage, assignedTo, createdBy, urgencyLevel, tags) VALUES (?, ?, ?, ?, ?, ?)';
         const values = [taskDescription, taskImage || null, assignedTo, createdBy, urgencyLevel, jsonTagIDs];
@@ -84,32 +82,15 @@ router.post('/viewTask', authorizeRole('Staff'), async (req, res) => {
     }
 
     try {
-        const taskResult = await SQLExecutor('SELECT tags FROM Tasks WHERE ID = ?', [taskID]);
-
-        if (taskResult.length === 0) {
-            return res.status(404).json({ error: 'Task not found' });
-        }
-        // get all tags
-        let tagIDs = taskResult[0].tags.ID;
-        console.log(tagIDs);
-        if (!Array.isArray(tagIDs)) {
-            return res.status(500).json({ error: 'Invalid tags format in database' });
-        }
-
-        const newID = await SQLExecutor('SELECT ID FROM TagTypes WHERE tagName = ?', ['New']);
-        // remove "new" tag
-        tagIDs = tagIDs.filter(tag => tag !== newID[0].ID);
-
         const modifiedTime = new Date();
-        // update tags in database
-        await SQLExecutor('UPDATE Tasks SET tags = ? WHERE ID = ?', [JSON.stringify({ "ID": tagIDs }), taskID]);
+        await SQLExecutor(`UPDATE Tasks SET isViewed = \'1\' WHERE ID = ?`, [taskID])
         await SQLExecutor(`
             INSERT INTO TaskHistory (taskID, fieldModified, previousValue, newValue, modifiedByID, modifiedByName, modifiedTime)
-            VALUES(?, ?, ?, ?, ?, ?, ?) `, [taskID, 'Viewed', '', 'Viewed', viewedByID, viewedByName, modifiedTime])
+            VALUES(?, ?, ?, ?, ?, ?, ?) `, [taskID, 'isViewed', '0', '1', viewedByID, viewedByName, modifiedTime])
 
-        res.status(200).json({ message: 'Task viewed successfully', taskID, updatedTags: tagIDs });
+        res.status(200).json({ message: 'Task viewed successfully' });
     } catch (error) {
-        console.error('Error updating task tags:', error);
+        console.error('Error view task:', error);
         res.status(500).json({ error: 'Database update error' });
     }
 });
@@ -181,6 +162,7 @@ router.put('/updateTask', authorizeRole('Staff'), async (req, res) => {
         for (const entry of historyEntries) {
             await SQLExecutor(historyQuery, entry);
         }
+        await SQLExecutor(`UPDATE Tasks SET isViewed = \'0\' WHERE ID = ?`, [taskID])
 
         res.status(200).json({ message: 'Task updated successfully', history: historyEntries });
     } catch (error) {
