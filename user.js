@@ -38,6 +38,24 @@ router.post('/register_user', authorizeRole('Manager'), async (req, res) => {
     }
 });
 
+// API for deleting a user, at least to be a supervisor
+router.delete('/:id', authorizeRole('Supervisor'), async (req, res) => {
+    const userId = req.params.id; // Get the user ID from the route parameters
+
+    try {
+        // Check if the user exists
+        const user = await SQLExecutor('SELECT * FROM Users WHERE ID = ?', [userId]);
+        if (user.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        await SQLExecutor('DELETE FROM Users WHERE ID = ?', [userId]);
+
+        res.status(200).json({ message: 'User and related data deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting member:', error);
+        res.status(500).json({ error: 'Error deleting member' });
+    }
+});
 // API for user to get all users info, for assignment use
 router.get('/allUsers', authorizeRole('Staff'), async (req, res) => {
     try {
