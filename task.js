@@ -254,6 +254,28 @@ router.post('/completeTask', authorizeRole('Staff'), async (req, res) => {
     }
 });
 
+// API of delete task, at least to be a staff
+router.delete('/:id', authorizeRole('Supervisor'), async (req, res) => {
+    const taskId = req.params.id; // 获取路径参数中的任务 ID
+
+    try {
+        // 检查任务是否存在
+        const taskExists = await SQLExecutor('SELECT * FROM Tasks WHERE ID = ?', [taskId]);
+        if (taskExists.length === 0) {
+            return res.status(404).json({ error: 'Task not found' });
+        }
+
+        // 删除任务
+        await SQLExecutor('DELETE FROM Tasks WHERE ID = ?', [taskId]);
+        await SQLExecutor('DELETE FROM TaskHistory WHERE taskID = ?', [taskId]);
+
+
+        res.status(200).json({ message: 'Task deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting task:', error);
+        res.status(500).json({ error: 'Failed to delete task' });
+    }
+});
 // API for supervisor and manager to get all tasks
 router.get('/allTasks', authorizeRole('Supervisor'), async (req, res) => {
     try {
