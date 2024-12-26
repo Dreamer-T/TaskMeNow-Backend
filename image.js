@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const { getPool } = require('./db');
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 const BUCKETURL = process.env.BUCKETURL || 'https://storage.googleapis.com';
+const BUCKETNAME = process.env.BUCKETNAME || 'mitto';
 
 const storage = multer.memoryStorage();
 const upload = multer({
@@ -18,8 +19,6 @@ const upload = multer({
 // GCS client
 const gcs = new Storage();
 
-// The ID of GCS bucket
-const bucketName = 'tmn_company_logo_images';
 
 
 const queryToDB = async (query, params = []) => {
@@ -46,12 +45,12 @@ router.post('/uploadAvatar', authorizeRole('Staff'), upload.single('Avatar'), as
 
     try {
         // upload file to Google Cloud Storage
-        await gcs.bucket(bucketName).file(destFileName).save(file.buffer, {
+        await gcs.bucket(BUCKETNAME).file(destFileName).save(file.buffer, {
             metadata: {
                 contentType: file.mimetype,
             },
         });
-        const avatarURL = `${BUCKETURL}/${bucketName}/${destFileName}`;
+        const avatarURL = `${BUCKETURL}/${BUCKETNAME}/${destFileName}`;
         const token = req.header('Authorization')?.split(' ')[1];
         const decoded = jwt.verify(token, JWT_SECRET);
         const userID = decoded.id;
@@ -75,12 +74,12 @@ router.post('/uploadTaskImage', authorizeRole('Staff'), upload.single('TaskImage
 
     try {
         // upload file to Google Cloud Storage
-        await gcs.bucket(bucketName).file(destFileName).save(file.buffer, {
+        await gcs.bucket(BUCKETNAME).file(destFileName).save(file.buffer, {
             metadata: {
                 contentType: file.mimetype,
             },
         });
-        const avatarURL = `${BUCKETURL}/${bucketName}/${destFileName}`;
+        const avatarURL = `${BUCKETURL}/${BUCKETNAME}/${destFileName}`;
         res.status(200).json({ message: `File uploaded successfully!`, fileLocation: avatarURL });
     } catch (error) {
         console.error('Error uploading avatar:', error);
@@ -96,7 +95,7 @@ router.get('/getImage', authorizeRole('Staff'), async (req, res) => {
         return res.status(400).json({ error: 'fileName is required' });
     }
 
-    const file = gcs.bucket(bucketName).file(fileName);  // 获取 GCS 中的文件
+    const file = gcs.bucket(BUCKETNAME).file(fileName);  // 获取 GCS 中的文件
 
     try {
         // 检查文件是否存在

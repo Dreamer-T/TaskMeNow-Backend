@@ -4,11 +4,12 @@ const connector = new Connector();
 
 let pool;
 let currentDatabase = process.env.DB_NAME || 'MainDatabase'; // default
+let connectionName = process.env.INSTANCE_CONNECTION_NAME || 'taskmenow:australia-southeast2:main-database';
 
 const createPool = async () => {
     try {
         const clientOpts = await connector.getOptions({
-            instanceConnectionName: 'taskmenow:australia-southeast2:main-database',
+            instanceConnectionName: connectionName,
             ipType: 'PUBLIC',
         });
 

@@ -23,3 +23,5 @@ ENV DB_PASSWORD=taskme103
 ENV DB_NAME=MainDatabase
 ENV JWT_SECRET=SECRETXPASS
 ENV BUCKETURL=https://storage.googleapis.com
+ENV BUCKETNAME=mitto
+ENV INSTANCE_CONNECTION_NAME=core-incentive-445913-q5:australia-southeast2:mitto
