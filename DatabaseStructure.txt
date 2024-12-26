@@ -24,6 +24,7 @@ Database Name: MainDatabase
      - userRole - ENUM - NOT NULL - ['Manager', 'Supervisor', 'Staff']
      - avatar - VARCHAR(255) - - URL of the avatar
      - createdTime - DATETIME - NOT NULL - Auto-generated
+     - loginTimes - INT - NOT NULL - the count of how many times that the user has logined
 
 3. Table Name: TagTypes
    - Fields:

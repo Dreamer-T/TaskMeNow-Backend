@@ -1,9 +1,56 @@
-'MainDatabase', 'CREATE DATABASE `MainDatabase` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION=\'N\' */'
+'CREATE TABLE `Users` (
+  `ID` int NOT NULL AUTO_INCREMENT,
+  `userName` varchar(45) NOT NULL,
+  `email` varchar(45) NOT NULL,
+  `password` varchar(255) DEFAULT NULL,
+  `userRole` enum(''Manager'',''Supervisor'',''Staff'') NOT NULL,
+  `avatar` varchar(255) DEFAULT ''https://storage.googleapis.com/tmn_company_logo_images/InitAvator.png'',
+  `createdTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `loginTimes` int NOT NULL DEFAULT ''0'',
+  PRIMARY KEY (`ID`),
+  UNIQUE KEY `email_UNIQUE` (`email`)
+) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci'
 
-'TagAndUser', 'CREATE TABLE `TagAndUser` (\n  `ID` int NOT NULL AUTO_INCREMENT,\n  `tagID` int NOT NULL,\n  `userID` int NOT NULL,\n  PRIMARY KEY (`ID`),\n  UNIQUE KEY `ID_UNIQUE` (`ID`),\n  KEY `userID_idx` (`userID`),\n  KEY `groupID_idx` (`tagID`),\n  CONSTRAINT `tagID` FOREIGN KEY (`tagID`) REFERENCES `TagTypes` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,\n  CONSTRAINT `userID` FOREIGN KEY (`userID`) REFERENCES `Users` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE\n) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci'
-'TagTypes', 'CREATE TABLE `TagTypes` (\n  `ID` int NOT NULL AUTO_INCREMENT,\n  `tagName` varchar(45) NOT NULL,\n  PRIMARY KEY (`ID`),\n  UNIQUE KEY `ID_UNIQUE` (`ID`)\n) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci'
-'TaskHistory', 'CREATE TABLE `TaskHistory` (\n  `ID` int NOT NULL AUTO_INCREMENT,\n  `taskID` int NOT NULL,\n  `modifiedByID` int NOT NULL,\n  `modifiedByName` varchar(45) NOT NULL,\n  `modifiedTime` datetime DEFAULT CURRENT_TIMESTAMP,\n  `fieldModified` varchar(255) NOT NULL,\n  `previousValue` text,\n  `newValue` text,\n  PRIMARY KEY (`ID`),\n  KEY `taskID` (`taskID`),\n  KEY `TaskHistory_ibfk_2` (`modifiedByID`),\n  CONSTRAINT `TaskHistory_ibfk_1` FOREIGN KEY (`taskID`) REFERENCES `Tasks` (`ID`),\n  CONSTRAINT `TaskHistory_ibfk_2` FOREIGN KEY (`modifiedByID`) REFERENCES `Users` (`ID`)\n) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci'
-CREATE TABLE `TaskHistory` (
+'CREATE TABLE `Tasks` (
+  `ID` int NOT NULL AUTO_INCREMENT,
+  `taskDescription` varchar(2048) NOT NULL,
+  `taskImage` varchar(256) DEFAULT NULL,
+  `urgencyLevel` int NOT NULL,
+  `assignedTo` int NOT NULL,
+  `createdBy` int NOT NULL,
+  `createdTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `lastModifiedTime` datetime DEFAULT CURRENT_TIMESTAMP,
+  `finishedTime` datetime DEFAULT NULL,
+  `tags` json NOT NULL,
+  `isDone` enum(''0'',''1'') NOT NULL DEFAULT ''0'',
+  `isViewed` enum(''0'',''1'') NOT NULL DEFAULT ''0'',
+  PRIMARY KEY (`ID`),
+  KEY `assignedTo_idx` (`assignedTo`,`createdBy`),
+  KEY `FK_CreatedID_idx` (`createdBy`),
+  CONSTRAINT `FK_AssignedID` FOREIGN KEY (`assignedTo`) REFERENCES `Users` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_CreatedID` FOREIGN KEY (`createdBy`) REFERENCES `Users` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=62 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci'
+
+CREATE TABLE `TagTypes` (
+   `ID` int NOT NULL AUTO_INCREMENT,
+   `tagName` varchar(45) NOT NULL,
+   PRIMARY KEY (`ID`),
+   UNIQUE KEY `ID_UNIQUE` (`ID`)
+ ) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+ CREATE TABLE `TagAndUser` (
+   `ID` int NOT NULL AUTO_INCREMENT,
+   `tagID` int NOT NULL,
+   `userID` int NOT NULL,
+   PRIMARY KEY (`ID`),
+   UNIQUE KEY `ID_UNIQUE` (`ID`),
+   KEY `userID_idx` (`userID`),
+   KEY `groupID_idx` (`tagID`),
+   CONSTRAINT `tagID` FOREIGN KEY (`tagID`) REFERENCES `TagTypes` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
+   CONSTRAINT `userID` FOREIGN KEY (`userID`) REFERENCES `Users` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE
+ ) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+
+ CREATE TABLE `TaskHistory` (
    `ID` int NOT NULL AUTO_INCREMENT,
    `taskID` int NOT NULL,
    `modifiedByID` int NOT NULL,
@@ -17,25 +64,4 @@ CREATE TABLE `TaskHistory` (
    KEY `TaskHistory_ibfk_2` (`modifiedByID`),
    CONSTRAINT `TaskHistory_ibfk_1` FOREIGN KEY (`taskID`) REFERENCES `Tasks` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
    CONSTRAINT `TaskHistory_ibfk_2` FOREIGN KEY (`modifiedByID`) REFERENCES `Users` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE
- ) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
-
-'Users', 'CREATE TABLE `Users` (\n  `ID` int NOT NULL AUTO_INCREMENT,\n  `userName` varchar(45) NOT NULL,\n  `email` varchar(45) NOT NULL,\n  `password` varchar(255) NOT NULL,\n  `userRole` enum(\'Manager\',\'Supervisor\',\'Staff\') NOT NULL,\n  `avatar` varchar(255) DEFAULT \'https://storage.googleapis.com/tmn_company_logo_images/%E7%99%BD%E9%87%912.jpg\',\n  `createdTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  PRIMARY KEY (`ID`),\n  UNIQUE KEY `email_UNIQUE` (`email`)\n) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci'
-CREATE TABLE `Tasks` (
-   `ID` int NOT NULL AUTO_INCREMENT,
-   `taskDescription` varchar(2048) NOT NULL,
-   `taskImage` varchar(256) DEFAULT NULL,
-   `urgencyLevel` int NOT NULL,
-   `assignedTo` int NOT NULL,
-   `createdBy` int NOT NULL,
-   `createdTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-   `lastModifiedTime` datetime DEFAULT CURRENT_TIMESTAMP,
-   `finishedTime` datetime DEFAULT NULL,
-   `tags` json NOT NULL,
-   `isDone` enum('0','1') NOT NULL DEFAULT '0',
-   `isViewed` enum('0','1') NOT NULL DEFAULT '0',
-   PRIMARY KEY (`ID`),
-   KEY `assignedTo_idx` (`assignedTo`,`createdBy`),
-   KEY `FK_CreatedID_idx` (`createdBy`),
-   CONSTRAINT `FK_AssignedID` FOREIGN KEY (`assignedTo`) REFERENCES `Users` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
-   CONSTRAINT `FK_CreatedID` FOREIGN KEY (`createdBy`) REFERENCES `Users` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE
- ) ENGINE=InnoDB AUTO_INCREMENT=59 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+ ) ENGINE=InnoDB AUTO_INCREMENT=61 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
