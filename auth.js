@@ -46,8 +46,9 @@ router.post('/login', async (req, res) => {
         if (!isValidPassword) {
             return res.status(400).json({ error: 'Invalid email or password' });
         }
-        const loginTimes = await SQLExecutor('SELECT loginTimes FROM Users WHERE ID = ?', [user.ID]);
-        SQLExecutor('UPDATE Users SET loginTimes = ? WHERE ID = ?', [loginTimes[0].loginTimes + 1, user.ID]);
+        const loginTimesResult = await SQLExecutor('SELECT loginTimes FROM Users WHERE ID = ?', [user.ID]);
+        const loginTimes = loginTimesResult[0].loginTimes;
+        SQLExecutor('UPDATE Users SET loginTimes = ? WHERE ID = ?', [loginTimes + 1, user.ID]);
         // JWT
         const token = jwt.sign({ id: user.ID, email: user.email, role: user.userRole, 'loginTimes': loginTimes + 1 }, JWT_SECRET, { expiresIn: '7d' }); // 返回令牌和用户信息
         const tagReult = getTagsFromDB(user.ID);
