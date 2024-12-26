@@ -77,7 +77,6 @@ router.post('/login', async (req, res) => {
 router.post('/changePassword', async (req, res) => {
     const { userID, newPassword } = req.body;
     const token = req.headers['Authorization']?.split(' ')[1]; // 从请求头获取 JWT
-
     try {
         // Validate input
         if (!userID || !newPassword) {
@@ -85,12 +84,12 @@ router.post('/changePassword', async (req, res) => {
         }
 
         // 验证 JWT 并提取用户 ID
-        if (!token) {
+        if (token.length === 0) {
             return res.status(401).json({ error: 'Unauthorized. Token is missing.' });
         }
         const decoded = jwt.verify(token, JWT_SECRET);
         const tokenID = decoded.id; // 从 JWT 中提取用户 ID
-        if (tokenID !== userID) {
+        if (parseInt(tokenID) !== parseInt(userID)) {
             return res.status(401).json({ error: 'Unauthorized. Token is invalid.' });
         }
         // Fetch the user's current password hash from the database
