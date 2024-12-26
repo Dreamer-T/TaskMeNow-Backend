@@ -76,7 +76,7 @@ router.post('/login', async (req, res) => {
 // Change Password API
 router.post('/changePassword', async (req, res) => {
     const { userID, newPassword } = req.body;
-    const token = req.headers['authorization']?.split(' ')[1]; // 从请求头获取 JWT
+    const token = req.headers['Authorization']?.split(' ')[1]; // 从请求头获取 JWT
 
     try {
         // Validate input
