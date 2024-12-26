@@ -49,7 +49,7 @@ router.post('/login', async (req, res) => {
         const loginTimes = await SQLExecutor('SELECT loginTimes FROM Users WHERE ID = ?', [user.ID]);
         SQLExecutor('UPDATE Users SET loginTimes = ? WHERE ID = ?', [loginTimes[0].loginTimes + 1, user.ID]);
         // JWT
-        const token = jwt.sign({ id: user.ID, email: user.email, role: user.userRole }, JWT_SECRET, { expiresIn: '7d', 'loginTimes': loginTimes + 1 }); // 返回令牌和用户信息
+        const token = jwt.sign({ id: user.ID, email: user.email, role: user.userRole, 'loginTimes': loginTimes + 1 }, JWT_SECRET, { expiresIn: '7d' }); // 返回令牌和用户信息
         const tagReult = getTagsFromDB(user.ID);
         res.status(200).json({
             message: '登录成功',
