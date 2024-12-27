@@ -12,7 +12,7 @@ const BUCKETNAME = process.env.BUCKETNAME || 'mitto';
 const storage = multer.memoryStorage();
 const upload = multer({
     storage: storage, limits: {
-        fileSize: 8 * 1024 * 1024  // 1MB
+        fileSize: 5 * 1024 * 1024  // 5MB
     }
 });
 
