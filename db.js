@@ -3,8 +3,8 @@ const { Connector } = require('@google-cloud/cloud-sql-connector');
 const connector = new Connector();
 
 let pool;
-let currentDatabase = process.env.DB_NAME || 'MainDatabase'; // default
-let connectionName = process.env.INSTANCE_CONNECTION_NAME || 'taskmenow:australia-southeast2:main-database';
+let currentDatabase = process.env.DB_NAME || 'TestDatabase'; // default
+let connectionName = process.env.INSTANCE_CONNECTION_NAME || 'core-incentive-445913-q5:australia-southeast2:mitto';
 
 const createPool = async () => {
     try {

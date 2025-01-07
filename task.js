@@ -53,17 +53,17 @@ router.get('/assignedTo/:assignedTo', authorizeRole('Staff'), async (req, res) =
 
 // API of create a task, at least to be a staff, tags have to contain "New" tag
 router.post('/createTask', authorizeRole('Staff'), async (req, res) => {
-    const { taskDescription, taskImage, assignedTo, createdBy, urgencyLevel, tags } = req.body;
+    const { taskDescription, taskImage, assignedTo, assigneeName, createdBy, creatorName, urgencyLevel, tags } = req.body;
 
     // check those are necessary
-    if (!taskDescription || !assignedTo || !createdBy || !urgencyLevel || !tags) {
+    if (!taskDescription || !assignedTo || !assigneeName || !createdBy || !urgencyLevel || !tags) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
 
     try {
         var jsonTagIDs = JSON.stringify({ "ID": tags });
-        const query = 'INSERT INTO Tasks (taskDescription, taskImage, assignedTo, createdBy, urgencyLevel, tags) VALUES (?, ?, ?, ?, ?, ?)';
-        const values = [taskDescription, taskImage || null, assignedTo, createdBy, urgencyLevel, jsonTagIDs];
+        const query = 'INSERT INTO Tasks (taskDescription, taskImage, assignedTo, assigneeName, createdBy, creatorName, urgencyLevel, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+        const values = [taskDescription, taskImage || null, assignedTo, assigneeName, createdBy, creatorName, urgencyLevel, jsonTagIDs];
         const result = await SQLExecutor(query, values);
 
         res.status(200).json({ message: 'Task created successfully', taskId: result.insertId });
@@ -280,18 +280,10 @@ router.delete('/:id', authorizeRole('Supervisor'), async (req, res) => {
 router.get('/allTasks', authorizeRole('Supervisor'), async (req, res) => {
     try {
         const tasks = await SQLExecutor('SELECT * FROM Tasks;', []);
-        const tasksWithCreator = await Promise.all(tasks.map(async (task) => {
-            // get userName via Users according to createdBy
-            const creatorResult = await SQLExecutor('SELECT userName FROM Users WHERE ID = ?', [task.createdBy]);
-            // include creatorName in json
-            task.creatorName = creatorResult.length > 0 ? creatorResult[0].userName : null;
-            return task;
-        }));
-
-        res.status(200).json(tasksWithCreator);
+        return res.status(200).json(tasks);
     } catch (error) {
         console.error('Error fetching task:', error);
-        res.status(500).json({ error: 'Database query error' });
+        return res.status(500).json({ error: 'Database query error' });
     }
 });
 
