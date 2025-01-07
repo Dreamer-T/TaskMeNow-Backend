@@ -34,19 +34,19 @@ router.post('/createTag', authorizeRole('Manager'), async (req, res) => {
     const { tagName } = req.body;  // 从请求体中获取 tagName
 
     if (!tagName) {
-        res.status(400).json({ error: 'Tag name is required' });
+        return res.status(400).json({ error: 'Tag name is required' });
     }
     try {
         // check whether tag name has already existed
         const result = await SQLExecutor('SELECT tagName FROM TagTypes WHERE tagName = ?', [tagName]);
         if (result.length > 0) {
-            res.status(400).json({ error: 'Tag name already exists' });
+            return res.status(400).json({ error: 'Tag name already exists' });
         }
         const insertResult = await SQLExecutor('INSERT INTO TagTypes (tagName) VALUES (?)', [tagName]);
         res.status(200).json({ message: `Tag "${tagName}" has been created` });
     } catch (error) {
         console.error('Error creating tag:', error);
-        res.status(500).json({ error: 'Database query error' });
+        return res.status(500).json({ error: 'Database query error' });
     }
 });
 
@@ -55,19 +55,19 @@ router.post('/changeTag', async (req, res) => {
     const { oldTagName, newTagName } = req.body;  // 从请求体中获取 tagName
 
     if (!oldTagName || !newTagName) {
-        res.status(400).json({ error: 'Tag name is required' });
+        return res.status(400).json({ error: 'Tag name is required' });
     }
     try {
         // check whether tag name has already existed
         const result = await SQLExecutor('SELECT tagName FROM TagTypes WHERE tagName = ?', [oldTagName]);
         if (result.length === 0) {
-            res.status(400).json({ error: 'No such tag' });
+            return res.status(400).json({ error: 'No such tag' });
         }
         const updateResult = await SQLExecutor('UPDATE TagTypes SET tagName = ? WHERE tagName = ?', [newTagName, oldTagName]);
-        res.status(200).json({ message: `Tag "${oldTagName}" has been changed into "${newTagName}` });
+        return res.status(200).json({ message: `Tag "${oldTagName}" has been changed into "${newTagName}` });
     } catch (error) {
         console.error('Error changing tag:', error);
-        res.status(500).json({ error: 'Database query error' });
+        return res.status(500).json({ error: 'Database query error' });
     }
 });
 
@@ -76,7 +76,7 @@ router.post('/deleteTag', authorizeRole('Manager'), async (req, res) => {
     const { tagName } = req.body;  // 从请求体中获取 tagName
 
     if (!tagName) {
-        res.status(400).json({ error: 'Tag name is required' });
+        return res.status(400).json({ error: 'Tag name is required' });
     }
 
     try {
@@ -93,7 +93,7 @@ router.post('/deleteTag', authorizeRole('Manager'), async (req, res) => {
 
         // 如果没有任务包含该 tagID，直接返回
         if (tasks.length === 0) {
-            res.status(200).json({
+            return res.status(200).json({
                 message: `Tag "${tagName}" has been deleted from table, relationships have been removed`,
                 updatedTaskCount: 0
             });
@@ -120,14 +120,14 @@ router.post('/deleteTag', authorizeRole('Manager'), async (req, res) => {
 
 
         // // 返回成功信息
-        res.status(200).json({
+        return res.status(200).json({
             message: `Tag "${tagName}" has been deleted from table, relationships have been removed`,
             updatedTaskCount: tasks.length
         });
 
     } catch (error) {
         console.error('Error deleting tag:', error);
-        res.status(500).json({ error: 'Database query error' });
+        return res.status(500).json({ error: 'Database query error' });
     }
 });
 
