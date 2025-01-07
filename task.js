@@ -243,7 +243,7 @@ router.post('/completeTask', authorizeRole('Staff'), async (req, res) => {
     }
 
     try {
-        const query = 'UPDATE Tasks SET isDone = \'1\' WHERE ID = ?';
+        const query = 'UPDATE Tasks SET isDone = \'1\' AND finishedTime = CURRENT_TIMESTAMP  WHERE ID = ?';
         const values = [taskID];
         const result = await SQLExecutor(query, values);
 
