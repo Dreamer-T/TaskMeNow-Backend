@@ -6,7 +6,9 @@ Database Name: MainDatabase
      - taskDescription - VARCHAR(2048) - NOT NULL - Description of the task
      - taskImage - VARCHAR(256) - - URL of the task image (one image per task)
      - assignedTo - INT - NOT NULL - FK, ID of the user assigned to complete this task
+     - assigneeName - VARCHAR(45) - - Name of who is assigned to finish this task
      - createdBy - INT - NOT NULL - FK, ID of the user who created this task
+     - creatorName - VARCHAR(45) - NOT NULL - Name of who create this task
      - createdTime - DATETIME - NOT NULL - Auto-generated
      - urgencyLevel - INT - NOT NULL - Level of urgency (1, 2, 3; higher values indicate lower urgency)
      - isDone - ENUM('0', '1') - NOT NULL - [1: Done, 0: Not done]

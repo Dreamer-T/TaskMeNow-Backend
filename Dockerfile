@@ -20,7 +20,10 @@ CMD [ "npm", "start" ]
 
 ENV DB_USER=root
 ENV DB_PASSWORD=taskme103
-ENV DB_NAME=MainDatabase
+# Active Database
+# ENV DB_NAME=MainDatabase
+# Development Database
+ENV DB_NAME=TestDatabase
 ENV JWT_SECRET=SECRETXPASS
 ENV BUCKETURL=https://storage.googleapis.com
 ENV BUCKETNAME=mitto
