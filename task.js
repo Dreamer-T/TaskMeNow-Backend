@@ -253,7 +253,26 @@ router.post('/completeTask', authorizeRole('Staff'), async (req, res) => {
         res.status(500).json({ error: 'Database error' });
     }
 });
+// API of complete task, at least to be a staff
+router.post('/uncompleteTask', authorizeRole('Staff'), async (req, res) => {
+    const { taskID } = req.body;
 
+    // check those are necessary
+    if (!taskID) {
+        return res.status(400).json({ error: 'Missing taskID' });
+    }
+
+    try {
+        const query = 'UPDATE Tasks SET isDone = \'0\', finishedTime = CURRENT_TIMESTAMP WHERE ID = ?';
+        const values = [taskID];
+        const result = await SQLExecutor(query, values);
+
+        res.status(200).json({ message: 'Task uncompelte successfully' });
+    } catch (error) {
+        console.error('Error uncompelting task:', error);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
 // API of delete task, at least to be a staff
 router.delete('/:id', authorizeRole('Supervisor'), async (req, res) => {
     const taskId = req.params.id; // 获取路径参数中的任务 ID
