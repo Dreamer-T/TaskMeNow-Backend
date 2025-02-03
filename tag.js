@@ -1,20 +1,8 @@
 const express = require('express');
-const { getPool } = require('./db');
+const { SQLExecutor } = require('./db');
 const { authorizeRole } = require('./authMiddleware');
 
 const router = express.Router();
-
-const SQLExecutor = async (query, params = []) => {
-    const pool = getPool();
-    const conn = await pool.getConnection();
-    try {
-        console.log(query);
-        const [result] = await conn.query(query, params);
-        return result;
-    } finally {
-        await conn.release();
-    }
-};
 
 
 // API for getting all the tags

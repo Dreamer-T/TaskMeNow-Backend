@@ -1,22 +1,12 @@
 const express = require('express');
-const { getPool } = require('./db');
+const { SQLExecutor } = require('./db');
 
 const router = express.Router();
 
 
-const getCompaniesFromDB = async (query) => {
-    const pool = getPool();
-    const conn = await pool.getConnection();
-    try {
-        const [result] = await conn.query(query);
-        return result;
-    } finally {
-        await conn.release();
-    }
-};
 router.get('/search_company', async (req, res) => {
     try {
-        const rows = await getCompaniesFromDB('SELECT * FROM Companies;');
+        const rows = await SQLExecutor('SELECT * FROM Companies;', []);
 
         // Optionally format the data before sending it back
         const companies = rows.map(company => ({

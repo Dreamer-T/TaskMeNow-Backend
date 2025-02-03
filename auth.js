@@ -1,42 +1,21 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { getPool, getUserByUseremail } = require('./db');
+
+const { SQLExecutor } = require('./db');
 
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
-const getTagsFromDB = async (id) => {
-    const pool = getPool();
-    const conn = await pool.getConnection();
-    try {
-        const [result] = await conn.query("SELECT * FROM TagAndUser WHERE userID = ?;", id);
-        console.log(result);
-        return result;
-    } finally {
-        await conn.release();
-    }
-};
-
-const SQLExecutor = async (query, params = []) => {
-    const pool = getPool();
-    const conn = await pool.getConnection();
-    try {
-        console.log(query);
-        const [result] = await conn.query(query, params);
-        return result;
-    } finally {
-        await conn.release();
-    }
-};
 
 // user login
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        const user = await getUserByUseremail(email);
+        const [result] = await SQLExecutor('SELECT * FROM Users WHERE email = ?;', [email]);
+        const user = result[0];
         if (!user) {
             return res.status(400).json({ error: 'Invalid email or password' });
         }
@@ -48,10 +27,10 @@ router.post('/login', async (req, res) => {
         }
         const loginTimesResult = await SQLExecutor('SELECT loginTimes FROM Users WHERE ID = ?', [user.ID]);
         const loginTimes = loginTimesResult[0].loginTimes;
-        SQLExecutor('UPDATE Users SET loginTimes = ? WHERE ID = ?', [loginTimes + 1, user.ID]);
+        await SQLExecutor('UPDATE Users SET loginTimes = ? WHERE ID = ?', [loginTimes + 1, user.ID]);
         // JWT
         const token = jwt.sign({ id: user.ID, email: user.email, role: user.userRole, 'loginTimes': loginTimes + 1 }, JWT_SECRET, { expiresIn: '7d' }); // 返回令牌和用户信息
-        const tagReult = getTagsFromDB(user.ID);
+        const tagReult = await SQLExecutor("SELECT * FROM TagAndUser WHERE userID = ?;", user.ID);
         res.status(200).json({
             message: '登录成功',
             user: {

@@ -4,7 +4,7 @@ const { Storage } = require('@google-cloud/storage');
 const { authorizeRole } = require('./authMiddleware');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
-const { getPool } = require('./db');
+const { SQLExecutor } = require('./db');
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 const BUCKETURL = process.env.BUCKETURL || 'https://storage.googleapis.com';
 const BUCKETNAME = process.env.BUCKETNAME || 'mitto';
@@ -20,19 +20,6 @@ const upload = multer({
 const gcs = new Storage();
 
 
-
-const queryToDB = async (query, params = []) => {
-    const pool = getPool();
-    const conn = await pool.getConnection();
-    try {
-        console.log(query);
-        const [result] = await conn.query(query, params);
-        // console.log(result);
-        return result;
-    } finally {
-        await conn.release();
-    }
-};
 // API for user to upload avatar
 router.post('/uploadAvatar', authorizeRole('Staff'), upload.single('Avatar'), async (req, res) => {
     // if file is included
@@ -54,7 +41,7 @@ router.post('/uploadAvatar', authorizeRole('Staff'), upload.single('Avatar'), as
         const token = req.header('Authorization')?.split(' ')[1];
         const decoded = jwt.verify(token, JWT_SECRET);
         const userID = decoded.id;
-        const update = await queryToDB('UPDATE Users SET avatar = ? WHERE ID = ?;', [avatarURL, userID]);
+        await SQLExecutor('UPDATE Users SET avatar = ? WHERE ID = ?;', [avatarURL, userID]);
         res.status(200).json({ message: `File uploaded successfully!`, fileLocation: avatarURL });
     } catch (error) {
         console.error('Error uploading avatar:', error);
