@@ -8,14 +8,11 @@ const router = express.Router();
 // user registration, only Manager can register a new user
 router.post('/register_user', authorizeRole('Manager'), async (req, res) => {
     const { username, email, password, role } = req.body;
-    const pool = getPool();
-    const conn = await pool.getConnection();
-
     try {
         // 加密密码
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        await conn.query('INSERT INTO Users (email, password, userName, userRole) VALUES (?, ?, ?, ?)', [email, hashedPassword, username, role]);
+        await SQLExecutor('INSERT INTO Users (email, password, userName, userRole) VALUES (?, ?, ?, ?)', [email, hashedPassword, username, role]);
 
         res.status(200).json({ message: 'User registered successfully' });
     } catch (error) {
