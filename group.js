@@ -7,8 +7,7 @@ const router = express.Router();
 // API for getting all the tags
 router.get('/getGroups', authorizeRole('Supervisor'), async (req, res) => {
     try {
-        // check whether tag name has already existed
-        const result = await SQLExecutor('SELECT * FROM Usergroups');
+        const result = await SQLExecutor('SELECT * FROM GroupUsersView');
         res.status(200).json(result);
     } catch (error) {
         console.error('Error getting groups:', error);
