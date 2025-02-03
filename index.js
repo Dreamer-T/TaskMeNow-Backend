@@ -6,6 +6,7 @@ const userRouter = require('./user');
 const tagRouter = require('./tag')
 const authRouter = require('./auth');
 const companyRouter = require('./company');
+const groupRouter = require('./group');
 
 const imageRouter = require('./image')
 const { authenticateToken } = require('./authMiddleware');
@@ -31,6 +32,7 @@ app.use(express.json());
     app.use('/users', authenticateToken, userRouter);
     app.use('/tags', authenticateToken, tagRouter);
     app.use('/images', authenticateToken, imageRouter);
+    app.use('/groups', authenticateToken, groupRouter);
 
 
 
