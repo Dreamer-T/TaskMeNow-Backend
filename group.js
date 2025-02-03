@@ -25,7 +25,7 @@ router.put('/renameGroup', authorizeRole('Supervisor'), async (req, res) => {
 
     try {
         // 检查 groupID 是否存在
-        const checkGroup = await SQLExecutor('SELECT * FROM Usergroups WHERE groupID = ?', [groupID]);
+        const checkGroup = await SQLExecutor('SELECT * FROM Usergroups WHERE idGroup = ?', [groupID]);
         if (checkGroup.length === 0) {
             return res.status(404).json({ error: 'Group not found' });
         }
