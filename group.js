@@ -31,7 +31,7 @@ router.put('/renameGroup', authorizeRole('Supervisor'), async (req, res) => {
         }
 
         // 更新 groupName
-        await SQLExecutor('UPDATE Usergroups SET groupName = ? WHERE groupID = ?', [newGroupName, groupID]);
+        await SQLExecutor('UPDATE Usergroups SET groupName = ? WHERE idGroup = ?', [newGroupName, groupID]);
 
         res.status(200).json({ message: 'Group renamed successfully' });
     } catch (error) {
