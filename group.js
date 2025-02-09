@@ -26,6 +26,8 @@ router.post('/createGroup', authorizeRole('Supervisor'), async (req, res) => {
     try {
         // 创建 group
         await SQLExecutor('INSERT INTO Usergroups (groupName) VALUES (?)', [groupName]);
+        await SQLExecutor('INSERT INTO UserinGroup (groupID, userID) VALUES ((SELECT idGroup FROM Usergroups WHERE groupName = ?), 1)',
+            [groupName]);
 
         res.status(200).json({ message: 'Group created successfully' });
     } catch (error) {
