@@ -24,14 +24,29 @@ router.post('/createGroup', authorizeRole('Supervisor'), async (req, res) => {
     }
 
     try {
-        // 创建 group
-        await SQLExecutor('INSERT INTO Usergroups (groupName) VALUES (?)', [groupName]);
-        await SQLExecutor('INSERT INTO UserinGroup (groupID, userID) VALUES ((SELECT idGroup FROM Usergroups WHERE groupName = ?), 1)',
-            [groupName]);
+        // 开启事务
+        await SQLExecutor('START TRANSACTION');
 
+        // 插入 Usergroups，如果重复则触发错误
+        const result = await SQLExecutor('INSERT INTO Usergroups (groupName) VALUES (?)', [groupName]);
+
+        // 直接从 INSERT 结果获取 insertId
+        const groupID = result.insertId;
+
+        await SQLExecutor('INSERT INTO UserinGroup (groupID, userID) VALUES (?, 1)', [groupID]);
+
+        await SQLExecutor('COMMIT');
         res.status(200).json({ message: 'Group created successfully' });
     } catch (error) {
+        await SQLExecutor('ROLLBACK'); // 事务回滚
+
         console.error('Error creating group:', error);
+
+        // 处理重复名称错误 (MySQL 错误代码 1062)
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(400).json({ error: 'Group name already exists' });
+        }
+
         res.status(500).json({ error: 'Database insert error' });
     }
 });
