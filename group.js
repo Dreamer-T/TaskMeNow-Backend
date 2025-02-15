@@ -158,10 +158,10 @@ router.delete('/removeUserFromGroup', authorizeRole('Supervisor'), async (req, r
         // 从 group 中移除 user
         await SQLExecutor('DELETE FROM UserinGroup WHERE groupID = ? AND userID = ?', [groupID, userID]);
 
-        res.status(200).json({ message: 'User removed from group successfully' });
+        return res.status(200).json({ message: 'User removed from group successfully' });
     } catch (error) {
         console.error('Error removing user from group:', error);
-        res.status(500).json({ error: 'Database delete error' });
+        return res.status(500).json({ error: 'Database delete error' });
     }
 })
 
