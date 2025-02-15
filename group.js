@@ -36,7 +36,7 @@ router.post('/createGroup', authorizeRole('Supervisor'), async (req, res) => {
         await SQLExecutor('INSERT INTO UserinGroup (groupID, userID) VALUES (?, 1)', [groupID]);
 
         await SQLExecutor('COMMIT');
-        res.status(200).json({ message: 'Group created successfully' });
+        res.status(200).json({ "groupID": groupID, message: 'Group created successfully' });
     } catch (error) {
         await SQLExecutor('ROLLBACK'); // 事务回滚
 
