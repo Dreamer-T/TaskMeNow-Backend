@@ -188,7 +188,7 @@ router.post('/createGroupTask', authorizeRole('Staff'), async (req, res) => {
 
     try {
         var jsonTagIDs = JSON.stringify({ "ID": tags });
-        const query = 'INSERT INTO Tasks (taskDescription, taskImage, assignedTo, assignedGroupName, createdBy, creatorName, urgencyLevel, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+        const query = 'INSERT INTO GroupTasks (taskDescription, taskImage, assignedTo, assignedGroupName, createdBy, creatorName, urgencyLevel, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
         const values = [taskDescription, taskImage || null, assignedTo, assignedGroupName, createdBy, creatorName, urgencyLevel, jsonTagIDs];
         const result = await SQLExecutor(query, values);
 
