@@ -178,7 +178,7 @@ router.delete('/removeUserFromGroup', authorizeRole('Supervisor'), async (req, r
     }
 })
 
-route.post('/createGroupTask', authorizeRole('Staff'), async (req, res) => {
+router.post('/createGroupTask', authorizeRole('Staff'), async (req, res) => {
     const { taskDescription, taskImage, assignedTo, assignedGroupName, createdBy, creatorName, urgencyLevel, tags } = req.body;
 
     // check those are necessary
