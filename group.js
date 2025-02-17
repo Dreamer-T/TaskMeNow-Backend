@@ -4,10 +4,22 @@ const { authorizeRole } = require('./authMiddleware');
 
 const router = express.Router();
 
-// API for getting all the tags
-router.get('/getGroups', authorizeRole('Supervisor'), async (req, res) => {
+// API for getting all details of all groups
+router.get('/getGroupDetails', authorizeRole('Supervisor'), async (req, res) => {
     try {
         const result = await SQLExecutor('SELECT * FROM GroupUsersView');
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Error getting groups:', error);
+        res.status(500).json({ error: 'Database query error' });
+    }
+});
+
+
+// API for getting all groups basic info (idGroup, groupName)
+router.get('/getGroups', authorizeRole('Supervisor'), async (req, res) => {
+    try {
+        const result = await SQLExecutor('SELECT * FROM Usergroups');
         res.status(200).json(result);
     } catch (error) {
         console.error('Error getting groups:', error);
