@@ -1,6 +1,7 @@
 const express = require('express');
 const { SQLExecutor } = require('./db');
 const { authorizeRole } = require('./authMiddleware');
+const { route } = require('./task');
 
 const router = express.Router();
 
@@ -174,6 +175,27 @@ router.delete('/removeUserFromGroup', authorizeRole('Supervisor'), async (req, r
     } catch (error) {
         console.error('Error removing user from group:', error);
         return res.status(500).json({ error: 'Database delete error' });
+    }
+})
+
+route.post('/createGroupTask', authorizeRole('Staff'), async (req, res) => {
+    const { taskDescription, taskImage, assignedTo, assignedGroupName, createdBy, creatorName, urgencyLevel, tags } = req.body;
+
+    // check those are necessary
+    if (!taskDescription || !assignedTo || !assignedGroupName || !createdBy || !urgencyLevel || !tags) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    try {
+        var jsonTagIDs = JSON.stringify({ "ID": tags });
+        const query = 'INSERT INTO Tasks (taskDescription, taskImage, assignedTo, assignedGroupName, createdBy, creatorName, urgencyLevel, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+        const values = [taskDescription, taskImage || null, assignedTo, assignedGroupName, createdBy, creatorName, urgencyLevel, jsonTagIDs];
+        const result = await SQLExecutor(query, values);
+
+        res.status(200).json({ message: 'Group task created successfully', taskId: result.insertId });
+    } catch (error) {
+        console.error('Error creating group task:', error);
+        res.status(500).json({ error: 'Database error' });
     }
 })
 
