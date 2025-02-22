@@ -15,6 +15,16 @@ router.get('/id/:id', authorizeRole('Staff'), async (req, res) => {
     }
 });
 
+router.get('/id/groupTask/:groupID', authorizeRole('Staff'), async (req, res) => {
+    const groupID = req.params.groupID;
+    try {
+        const task = await SQLExecutor('SELECT * FROM GroupTasks WHERE assignedTo = ?;', [groupID]);
+        res.status(200).json(task);
+    } catch (error) {
+        console.error('Error fetching task:', error);
+        res.status(500).json({ error: 'Database query error' });
+    }
+});
 router.get('/assignedTo/:assignedTo', authorizeRole('Staff'), async (req, res) => {
     const assignedTo = req.params.assignedTo;
     try {
@@ -181,23 +191,6 @@ router.get('/taskHistory/:taskID', authorizeRole('Supervisor'), async (req, res)
     }
 });
 
-// // API of delete the tag of a task, at least to be a staff
-// router.post('/deleteTagFromTask', authorizeRole('Staff'), async (req, res) => {
-//     const { taskID, tagID } = req.body;
-
-//     // check those are necessary
-//     if (!taskID || !tagID) {
-//         return res.status(400).json({ error: 'Missing required fields' });
-//     }
-
-//     try {
-//         // TODO:这里需要添加一个只删除tagID的方法
-//         res.status(200).json({ message: `Task#${taskID} has deleted tag#${tagID} successfully` });
-//     } catch (error) {
-//         console.error('Error updating task:', error);
-//         res.status(500).json({ error: 'Database error' });
-//     }
-// });
 
 // API of reassign a task, at least to be a staff
 router.post('/reassignTask', authorizeRole('Supervisor'), async (req, res) => {
@@ -293,6 +286,39 @@ router.get('/allTasks', authorizeRole('Supervisor'), async (req, res) => {
     }
 });
 
+// API for supervisor and manager to get all group tasks
+router.get('/allGroupTasks', authorizeRole('Supervisor'), async (req, res) => {
+    try {
+        const tasks = await SQLExecutor('SELECT * FROM GroupTasks;', []);
+        return res.status(200).json(tasks);
+    } catch (error) {
+        console.error('Error fetching task:', error);
+        return res.status(500).json({ error: 'Database query error' });
+    }
+});
+
+router.get('/groupTasks', authorizeRole('Staff'), async (req, res) => {
+    const { userID } = req.query; // 建议使用 query 而不是 body 传递 GET 请求参数
+    try {
+        // 查询用户所属的所有 groupID
+        const groups = await SQLExecutor('SELECT idGroup FROM GroupUsersView WHERE ID = ?', [userID]);
+
+        if (groups.length === 0) {
+            return res.status(200).json([]); // 用户没有所属团队，返回空数组
+        }
+
+        const groupIDs = groups.map(group => group.groupID);
+
+        // 查询这些 groupID 对应的任务
+        const placeholders = groupIDs.map(() => '?').join(',');
+        const tasks = await SQLExecutor(`SELECT * FROM GroupTasks WHERE assignedTo IN (${placeholders})`, groupIDs);
+
+        return res.status(200).json(tasks);
+    } catch (error) {
+        console.error('Error fetching tasks:', error);
+        return res.status(500).json({ error: 'Database query error' });
+    }
+});
 
 
 module.exports = router;
