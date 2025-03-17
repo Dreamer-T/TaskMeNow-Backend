@@ -22,32 +22,50 @@ const gcs = new Storage();
 
 // API for user to upload avatar
 router.post('/uploadAvatar', authorizeRole('Staff'), upload.single('Avatar'), async (req, res) => {
-    // if file is included
     if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded.' });
     }
 
-    const file = req.file;  // get uploaded file
-    const destFileName = "UserAvatar/" + Date.now() + '-' + Math.round(Math.random() * 1E9) + file.originalname;  // unique file name
+    const file = req.file;
+    const destFileName = "UserAvatar/" + Date.now() + '-' + Math.round(Math.random() * 1E9) + file.originalname;
+    const avatarURL = `${BUCKETURL}/${BUCKETNAME}/${destFileName}`;
+
+    const token = req.header('Authorization')?.split(' ')[1];
+    let userID;
 
     try {
-        // upload file to Google Cloud Storage
+        const decoded = jwt.verify(token, JWT_SECRET);
+        userID = decoded.id;
+
+        // 开启数据库事务
+        await SQLExecutor('START TRANSACTION;');
+
+        // 先将 avatar 设置为临时状态，例如 'pending'
+        await SQLExecutor('UPDATE Users SET avatar = ? WHERE ID = ?;', ['pending', userID]);
+
+        // 上传文件到 GCS
         await gcs.bucket(BUCKETNAME).file(destFileName).save(file.buffer, {
             metadata: {
                 contentType: file.mimetype,
             },
         });
-        const avatarURL = `${BUCKETURL}/${BUCKETNAME}/${destFileName}`;
-        const token = req.header('Authorization')?.split(' ')[1];
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const userID = decoded.id;
+
+        // 上传成功后，再更新数据库
         await SQLExecutor('UPDATE Users SET avatar = ? WHERE ID = ?;', [avatarURL, userID]);
-        res.status(200).json({ message: `File uploaded successfully!`, fileLocation: avatarURL });
+
+        // 提交事务
+        await SQLExecutor('COMMIT;');
+        res.status(200).json({ message: 'File uploaded successfully!', fileLocation: avatarURL });
+
     } catch (error) {
         console.error('Error uploading avatar:', error);
+
+        // 发生错误，回滚事务
+        await SQLExecutor('ROLLBACK;');
         res.status(500).json({ error: 'Failed to upload file to Cloud Storage' });
     }
 });
+
 
 // API for user to upload avatar
 router.post('/uploadTaskImage', authorizeRole('Staff'), upload.single('TaskImage'), async (req, res) => {
